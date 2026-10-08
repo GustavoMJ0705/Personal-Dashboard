@@ -32,16 +32,7 @@ const nowLeft = computed(() => {
   return ((h * 60 + m) / 60) * HOUR_WIDTH
 })
 
-const { members } = useFamily()
-const { userId } = useAuth()
-
-function owner(event: AgendaEvent) {
-  if (!members.value.length) return null
-  if (!event.family_id) return { name: members.value.find((m) => m.user_id === userId.value)?.display_name ?? '', family: false, label: 'Você' }
-  if (!event.assignee_id) return { name: '', family: true, label: 'Família' }
-  const name = members.value.find((m) => m.user_id === event.assignee_id)?.display_name ?? ''
-  return { name, family: !name, label: event.assignee_id === userId.value ? 'Você' : name || 'Família' }
-}
+const owner = useEventOwner()
 
 function isPast(event: AgendaEvent) {
   return Date.parse(event.ends_at) < props.now.getTime()
@@ -66,7 +57,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
     tabindex="0"
     role="region"
     :aria-label="`Linha do tempo de ${dayLabel}. Role para os lados para ver outros horários.`"
-    class="-mx-5 overflow-x-auto overscroll-x-contain border-y bg-canvas md:mx-0 md:rounded-lg md:border"
+    class="overflow-x-auto overscroll-x-contain rounded-lg border bg-canvas"
   >
     <div class="relative" :style="{ width: `${totalWidth}px`, height: `${height}px` }">
       <div

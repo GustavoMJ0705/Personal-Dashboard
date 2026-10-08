@@ -94,7 +94,7 @@ Migrations em `supabase/migrations/`; testes de RLS em `supabase/tests/`.
 1. Autenticação: cadastro, login e logout
 2. Início: saudação, relógio, tarefas do dia (minhas, atribuídas a mim e da família toda), compromissos do dia e situação da família
 3. Tarefas: criar, concluir, editar, excluir, adiar, com "Para quem"
-4. Agenda horizontal: faixa de dias rolável + linha do tempo do dia (horas da esquerda para a direita), filtro por familiar
+4. Agenda: faixa de dias rolável + linha do tempo do dia (horizontal no desktop, vertical no celular), filtro por familiar
 5. Família: criar família, meu status, membros, adicionar e remover membro (dono)
 6. Lembretes com data e hora, disparados por `pg_cron`
 
@@ -139,8 +139,9 @@ só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de
 - **Início (a peça marcante, o resto fica quieto):** saudação pelo horário com o meu nome ("Boa tarde, Gustavo"),
   a hora atual grande em Bricolage com numerais tabulares, a data por extenso e uma frase que responde
   "o que fazer agora". Abaixo: tarefas do dia, compromissos do dia (próximo em destaque) e situação da família.
-- **Agenda:** faixa de dias rolável (scroll-snap) no topo; abaixo, a linha do tempo do dia com 00h–24h na horizontal,
-  linha de "agora", blocos posicionados pelo horário e faixas para sobreposições. Dia inteiro numa faixa própria.
+- **Agenda:** faixa de dias rolável (scroll-snap) no topo; abaixo, a linha do tempo do dia. No desktop (md+) as horas
+  correm na horizontal; no celular, na vertical (coluna rolável de 00h a 24h, sobreposições lado a lado).
+  Linha de "agora" e blocos posicionados pelo horário nas duas. Dia inteiro numa faixa própria.
   Detalhes e edição inline abaixo da linha do tempo. Sem cor por pessoa: quem é o dono aparece pelo avatar de iniciais.
 - Itens compartilhados mostram para quem são ("Para Ana", "Família"); pessoais não mostram nada.
 - Tarefas como linhas de lista com divisores, não um grid de cards.

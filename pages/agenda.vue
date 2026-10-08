@@ -172,8 +172,20 @@ function retry() {
 
       <div v-else class="flex flex-col gap-4">
         <AgendaAllDay v-if="allDay.length" :events="allDay" :selected-id="selectedId" @select="select" />
+        <AgendaTimelineVertical
+          v-if="timed.length"
+          class="md:hidden"
+          :events="timed"
+          :day="date"
+          :now="now"
+          :today="today"
+          :selected-id="selectedId"
+          :day-label="dayLabel"
+          @select="select"
+        />
         <AgendaTimeline
           v-if="timed.length"
+          class="hidden md:block"
           :events="timed"
           :day="date"
           :now="now"

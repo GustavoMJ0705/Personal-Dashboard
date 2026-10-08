@@ -72,6 +72,9 @@ export interface TimelineBlock {
   start: number
   end: number
   lane: number
+  /** Quantas faixas o grupo de sobreposição deste bloco usa (para dividir a largura na vertical). */
+  groupLanes: number
+  /** Posição e tamanho no eixo do tempo, em px (left/width na horizontal, top/height na vertical). */
   left: number
   width: number
 }
@@ -90,14 +93,27 @@ export function layoutTimeline(events: readonly AgendaEvent[], day: string, hour
     .map((event) => ({ event, ...minutesOnDay(event, day) }))
     .sort((a, b) => a.start - b.start || b.end - a.end)
 
+  let group: TimelineBlock[] = []
+  let groupEnd = -Infinity
+  const closeGroup = () => {
+    const lanes = Math.max(...group.map((b) => b.lane + 1), 1)
+    for (const block of group) block.groupLanes = lanes
+    group = []
+  }
+
   for (const item of timed) {
     const left = (item.start / 60) * hourWidth
     const width = Math.max(((item.end - item.start) / 60) * hourWidth, minWidth)
+    if (left >= groupEnd) closeGroup()
     let lane = laneEnds.findIndex((end) => end <= left + 0.5)
     if (lane === -1) lane = laneEnds.length
     laneEnds[lane] = left + width + 4
-    blocks.push({ ...item, lane, left, width })
+    const block: TimelineBlock = { ...item, lane, groupLanes: 1, left, width }
+    blocks.push(block)
+    group.push(block)
+    groupEnd = Math.max(groupEnd, left + width + 4)
   }
+  closeGroup()
 
   return { blocks, lanes: Math.max(laneEnds.length, 1) }
 }
