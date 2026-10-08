@@ -1,4 +1,5 @@
 import type { AgendaEvent } from '~/types/models'
+import { type EventsChange, onEventsChange } from './useEventsRealtime'
 
 export type AgendaStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type EventDraft = Pick<
@@ -16,6 +17,7 @@ const TEMP_PREFIX = 'temp-'
 const pending = new Map<string, number>()
 const renderKeys = new Map<string, string>()
 let requestSeq = 0
+let listening = false
 
 export const isTempEvent = (event: Pick<AgendaEvent, 'id'>) => event.id.startsWith(TEMP_PREFIX)
 export const eventKey = (event: Pick<AgendaEvent, 'id'>) => renderKeys.get(event.id) ?? event.id
@@ -37,6 +39,38 @@ export function useAgenda() {
   }
   const drop = (id: string) => {
     events.value = events.value.filter((event) => event.id !== id)
+  }
+  const replaceTemp = (tempId: string, row: AgendaEvent) => {
+    renderKeys.set(row.id, tempId)
+    events.value = events.value.filter((event) => event.id !== row.id).map((event) => (event.id === tempId ? row : event))
+  }
+
+  function receive(change: EventsChange) {
+    if (change.eventType === 'DELETE') {
+      if (change.old.id && !pending.has(change.old.id)) drop(change.old.id)
+      return
+    }
+    const row = change.new
+    if (pending.has(row.id)) return
+    const loaded = range.value
+    if (!loaded || Date.parse(row.starts_at) >= Date.parse(loaded.end) || Date.parse(row.ends_at) < Date.parse(loaded.start)) {
+      drop(row.id)
+      return
+    }
+    const current = find(row.id)
+    if (!current) {
+      const temp = events.value.find((event) =>
+        isTempEvent(event) && event.title === row.title && Date.parse(event.starts_at) === Date.parse(row.starts_at),
+      )
+      if (temp) return replaceTemp(temp.id, row)
+    }
+    if (current && Date.parse(row.updated_at) < Date.parse(current.updated_at)) return
+    put(row)
+  }
+
+  if (import.meta.client && !listening) {
+    listening = true
+    onEventsChange(receive)
   }
 
   async function track<T>(id: string, run: () => PromiseLike<T>): Promise<T> {
@@ -106,10 +140,7 @@ export function useAgenda() {
       toast.error('Não foi possível criar o compromisso. Tente de novo.')
       return false
     }
-    if (find(temp.id)) {
-      renderKeys.set(data.id, temp.id)
-      events.value = events.value.map((event) => (event.id === temp.id ? data : event))
-    }
+    if (find(temp.id)) replaceTemp(temp.id, data)
     return true
   }
 

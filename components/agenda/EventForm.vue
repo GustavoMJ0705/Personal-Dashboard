@@ -3,14 +3,20 @@ import { Trash2 } from 'lucide-vue-next'
 import type { EventDraft } from '~/composables/useAgenda'
 import type { AgendaEvent } from '~/types/models'
 import { eventDays } from '~/utils/agenda'
+import { type Audience, audienceColumns, audienceOf } from '~/utils/family'
 
 const props = defineProps<{
   event?: AgendaEvent
   day: string
+  defaultAudience?: Audience
 }>()
 const emit = defineEmits<{ close: [], created: [day: string] }>()
 
 const { create, update, remove } = useAgenda()
+const { userId } = useAuth()
+const { family } = useFamily()
+const audience = ref<Audience>(props.event ? audienceOf(props.event) : props.defaultAudience ?? 'me')
+const isCreator = computed(() => !props.event || props.event.user_id === userId.value)
 
 function addHour(time: string) {
   const [hour = 0, minute = 0] = time.split(':').map(Number)
@@ -73,8 +79,7 @@ function toDraft(): EventDraft | null {
     starts_at: startsAt.toISOString(),
     ends_at: endsAt.toISOString(),
     location: form.location.trim() || null,
-    family_id: props.event?.family_id ?? null,
-    assignee_id: props.event?.assignee_id ?? null,
+    ...audienceColumns(audience.value, family.value?.id ?? props.event?.family_id ?? null),
   }
 }
 
@@ -133,6 +138,8 @@ function confirmDelete() {
 
     <UiTextField :id="fieldId('local')" v-model="form.location" label="Local" autocomplete="off" />
 
+    <FamilyAudienceSelect v-if="family" :id="fieldId('para-quem')" v-model="audience" :can-make-personal="isCreator" />
+
     <div v-if="confirmingDelete" role="group" aria-label="Confirmar exclusão" class="flex flex-wrap items-center gap-3 rounded bg-danger-soft px-3.5 py-3">
       <p class="mr-auto text-[15px] text-danger">Excluir este compromisso? Não dá para desfazer.</p>
       <UiButton variant="ghost" size="sm" @click="confirmingDelete = false">Cancelar</UiButton>
@@ -140,7 +147,7 @@ function confirmDelete() {
     </div>
 
     <div v-else class="flex flex-wrap items-center gap-2">
-      <UiButton v-if="event" variant="danger-ghost" size="sm" class="-ml-3" @click="confirmingDelete = true">
+      <UiButton v-if="event && isCreator" variant="danger-ghost" size="sm" class="-ml-3" @click="confirmingDelete = true">
         <Trash2 class="size-4" aria-hidden="true" />
         Excluir
       </UiButton>
