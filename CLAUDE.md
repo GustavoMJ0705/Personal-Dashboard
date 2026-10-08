@@ -59,9 +59,10 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
 - Tipos gerados pelo CLI, nunca escritos à mão: `npm run db:types`
   (`supabase gen types typescript --linked --schema public > types/database.types.ts`).
   Aliases legíveis (`Task`, `TaskPriority`...) ficam em `types/models.ts`, derivados do arquivo gerado.
-- Cadastro aberto: `enable_signup = true` em `supabase/config.toml` (local) e "Allow new users to sign up" ligado no painel.
-  A tela funciona com ou sem "Confirm email": sem sessão no retorno do `signUp`, mostra o aviso de confirmação;
-  o link volta para `/login`, que troca o código pela sessão e segue para o início.
+- Cadastro aberto e **sem confirmação por e-mail**: quem se cadastra já entra logado.
+  Local: `enable_signup = true` e `enable_confirmations = false` em `supabase/config.toml`.
+  Produção: "Allow new users to sign up" ligado e "Confirm email" desligado no painel.
+  O código ainda trata o caso com confirmação (aviso + retorno por `/login`) caso a opção seja religada.
   Em produção, a URL da Vercel precisa estar em Authentication → URL Configuration (Site URL e Redirect URLs).
 - Realtime em `tasks`, `events` e `family_members`: com família, outra pessoa pode mudar o que eu vejo.
   Os canais não filtram por `user_id`; o RLS já limita o que chega a cada um.
