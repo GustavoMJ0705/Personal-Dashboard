@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { CalendarDays, House, ListChecks } from 'lucide-vue-next'
+import { CalendarDays, House, ListChecks, Users } from 'lucide-vue-next'
 
 export interface NavItem {
   to: string
@@ -8,9 +8,10 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  { to: '/', label: 'Hoje', icon: House },
-  { to: '/tarefas', label: 'Tarefas', icon: ListChecks },
+  { to: '/', label: 'Início', icon: House },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays },
+  { to: '/tarefas', label: 'Tarefas', icon: ListChecks },
+  { to: '/familia', label: 'Família', icon: Users },
 ]
 
 export function isNavItemActive(item: NavItem, path: string) {

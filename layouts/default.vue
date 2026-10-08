@@ -1,3 +1,16 @@
+<script setup lang="ts">
+const tasks = useTasks()
+const family = useFamily()
+const events = useEventsRealtime()
+
+onMounted(() => {
+  if (family.status.value === 'idle') void family.load()
+  family.subscribe()
+  tasks.subscribe()
+  events.subscribe()
+})
+</script>
+
 <template>
   <div class="min-h-dvh md:pl-rail">
     <a

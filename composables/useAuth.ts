@@ -1,3 +1,5 @@
+import { stopEventsSync } from './useEventsRealtime'
+import { stopFamilySync } from './useFamily'
 import { stopTasksSync } from './useTasks'
 
 const PRESERVED_STATE = new Set(['toasts', 'now'])
@@ -21,7 +23,7 @@ export function useAuth() {
       toast.error('Não foi possível sair. Verifique a conexão e tente de novo.')
       return
     }
-    await stopTasksSync(client)
+    await Promise.all([stopTasksSync(client), stopFamilySync(client), stopEventsSync(client)])
     clearNuxtState((key) => !PRESERVED_STATE.has(key))
     await navigateTo('/login', { replace: true })
   }

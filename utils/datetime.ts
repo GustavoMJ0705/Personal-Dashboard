@@ -112,3 +112,24 @@ const dayMonthFormatter = new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE,
 export function formatDayMonth(civil: string): string {
   return dayMonthFormatter.format(civilToDate(civil))
 }
+
+/** "agora mesmo", "há 5 min", "há 3 h", "ontem às 18:40" ou "em 02/10/2026". */
+export function formatRelativeTime(iso: string, now: Date): string {
+  const date = new Date(iso)
+  const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000)
+  if (minutes < 1) return 'agora mesmo'
+  if (minutes < 60) return `há ${minutes} min`
+  const today = toCivilDate(now)
+  const day = toCivilDate(date)
+  if (day === today) return `há ${Math.floor(minutes / 60)} h`
+  if (day === addDaysToCivilDate(today, -1)) return `ontem às ${formatTime(date)}`
+  return `em ${formatDate(date)}`
+}
+
+/** "Bom dia", "Boa tarde" ou "Boa noite" pelo horário de São Paulo. */
+export function greetingFor(date: Date): string {
+  const hour = Number(formatTime(date).slice(0, 2))
+  if (hour >= 5 && hour < 12) return 'Bom dia'
+  if (hour >= 12 && hour < 18) return 'Boa tarde'
+  return 'Boa noite'
+}

@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { Trash2 } from 'lucide-vue-next'
 import type { Task, TaskPriority } from '~/types/models'
+import { audienceColumns, audienceOf } from '~/utils/family'
 import { PRIORITY_LABEL } from '~/utils/tasks'
 
 const props = defineProps<{ task: Task }>()
 const emit = defineEmits<{ close: [] }>()
 
 const { update, remove } = useTasks()
+const { userId } = useAuth()
+const { family } = useFamily()
 
 const form = reactive({
   title: props.task.title,
   description: props.task.description ?? '',
   due_date: props.task.due_date ?? '',
   priority: props.task.priority,
+  audience: audienceOf(props.task),
 })
+const isCreator = computed(() => props.task.user_id === userId.value)
 const titleError = ref<string | null>(null)
 const confirmingDelete = ref(false)
 const root = ref<HTMLElement>()
@@ -37,8 +42,7 @@ function save() {
     description: form.description.trim() || null,
     due_date: form.due_date || null,
     priority: form.priority,
-    family_id: props.task.family_id,
-    assignee_id: props.task.assignee_id,
+    ...audienceColumns(form.audience, family.value?.id ?? props.task.family_id),
   })
 }
 
@@ -98,6 +102,14 @@ function confirmDelete() {
       </fieldset>
     </div>
 
+    <FamilyAudienceSelect
+      v-if="family"
+      :id="fieldId('para-quem')"
+      v-model="form.audience"
+      :can-make-personal="isCreator"
+      class="sm:w-64"
+    />
+
     <div v-if="confirmingDelete" role="group" aria-label="Confirmar exclusão" class="flex flex-wrap items-center gap-3 rounded bg-danger-soft px-3.5 py-3">
       <p class="mr-auto text-[15px] text-danger">Excluir esta tarefa? Não dá para desfazer.</p>
       <UiButton variant="ghost" size="sm" @click="confirmingDelete = false">Cancelar</UiButton>
@@ -105,7 +117,7 @@ function confirmDelete() {
     </div>
 
     <div v-else class="flex flex-wrap items-center gap-2">
-      <UiButton variant="danger-ghost" size="sm" class="-ml-3" @click="confirmingDelete = true">
+      <UiButton v-if="isCreator" variant="danger-ghost" size="sm" class="-ml-3" @click="confirmingDelete = true">
         <Trash2 class="size-4" aria-hidden="true" />
         Excluir
       </UiButton>

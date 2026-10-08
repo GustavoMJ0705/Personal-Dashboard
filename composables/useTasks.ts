@@ -127,12 +127,10 @@ export function useTasks() {
 
   function openChannel() {
     if (!userId.value) return
-    const filter = `user_id=eq.${userId.value}`
+    // Sem filtro por user_id: tarefas da família também chegam, e o RLS limita o resto.
     channel = client
       .channel(`tasks:${userId.value}`)
-      .on<Task>('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tasks', filter }, handleChange)
-      .on<Task>('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter }, handleChange)
-      .on<Task>('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tasks' }, handleChange)
+      .on<Task>('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, handleChange)
       .subscribe((state) => {
         channelStatus = state
       })

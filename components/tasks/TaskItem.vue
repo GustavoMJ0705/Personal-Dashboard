@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { CalendarArrowUp, Check } from 'lucide-vue-next'
+import { CalendarArrowUp, Check, Users } from 'lucide-vue-next'
 import { isTempTask } from '~/composables/useTasks'
 import type { Task } from '~/types/models'
 import { addDaysToCivilDate, formatCivilDate, formatDate } from '~/utils/datetime'
+import { audienceLabel } from '~/utils/family'
 import { PRIORITY_LABEL, type TaskRowContext } from '~/utils/tasks'
 
 const props = defineProps<{
@@ -14,6 +15,9 @@ const props = defineProps<{
 const emit = defineEmits<{ edit: [], close: [] }>()
 
 const { toggleComplete, postpone } = useTasks()
+const { userId } = useAuth()
+const { members } = useFamily()
+const forWhom = computed(() => audienceLabel(props.task, members.value, userId.value))
 const titleButton = ref<HTMLButtonElement>()
 
 const done = computed(() => props.task.completed_at !== null)
@@ -69,8 +73,12 @@ function closeEditor() {
           class="block break-words text-base leading-snug"
           :class="done ? 'text-ink-subtle line-through' : 'text-ink'"
         >{{ task.title }}</span>
-        <span v-if="dueText || task.priority !== 'normal' || task.description" class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+        <span v-if="dueText || forWhom || task.priority !== 'normal' || task.description" class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
           <span v-if="dueText" :class="context === 'overdue' ? 'font-medium text-danger' : 'text-ink-muted'">{{ dueText }}</span>
+          <span v-if="forWhom" class="inline-flex items-center gap-1 text-ink-muted">
+            <Users class="size-3.5" aria-hidden="true" />
+            {{ forWhom }}
+          </span>
           <span
             v-if="task.priority !== 'normal' && !done"
             class="rounded-sm px-1.5 py-px text-[13px] font-medium"
