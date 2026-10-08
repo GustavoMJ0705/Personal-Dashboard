@@ -9,6 +9,7 @@ export default {
       transparent: 'transparent',
       current: 'currentColor',
       canvas: token('canvas'),
+      panel: token('panel'),
       surface: {
         DEFAULT: token('surface'),
         strong: token('surface-strong'),
@@ -27,6 +28,11 @@ export default {
         hover: token('accent-hover'),
         soft: token('accent-soft'),
         contrast: token('accent-contrast'),
+      },
+      action: {
+        DEFAULT: token('action'),
+        hover: token('action-hover'),
+        contrast: token('action-contrast'),
       },
       success: {
         DEFAULT: token('success'),

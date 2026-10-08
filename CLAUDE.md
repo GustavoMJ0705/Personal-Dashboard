@@ -106,15 +106,24 @@ Carregar `frontend-design` e `ui-ux-pro-max` **antes** de escrever qualquer comp
 
 ## Direção visual
 
-Base branca, azul como cor de ação. Limpa e moderna, espaçamento generoso, bordas sutis,
-sombras discretas ou nenhuma. Sem gradiente chamativo, glassmorphism, emoji como ícone
-ou decoração sem função. Dark mode fora do v1, mas os tokens já preparados para ele.
+Dois temas, escolhidos no seletor (Claro, Escuro, Automático) e guardados no cookie `theme`,
+aplicado como `data-theme` no `<html>` pelo servidor (sem piscar):
+- **Claro:** base branca, azul como cor de ação.
+- **Escuro:** preto com azul royal. O azul é secundário: ações principais e seleções em branco (`action`),
+  azul em detalhes (ícones de seção, indicador da navegação, pontos, linha de agora, links).
+Limpa e moderna, espaçamento generoso, bordas sutis, sombras discretas. Sem gradiente chamativo,
+glassmorphism, emoji como ícone ou decoração sem função.
+
+Elementos visuais (nos dois temas): fundo pontilhado de caderno sumindo para baixo, brilho azul discreto no topo,
+seções em painéis (`.panel`, fundo `panel`) com título e ícone (`UiSectionTitle`), régua do dia no Início,
+mini calendário no trilho lateral e estados vazios com ícone (`UiEmptyState`).
 
 ### Tokens (definidos uma vez; nunca hardcodar cor em componente)
 
 Cores como variáveis CSS (triplas RGB) em `assets/css/main.css`, mapeadas no `tailwind.config.ts` com
 `rgb(var(--color-x) / <alpha-value>)`. O `theme.colors` **substitui** a paleta padrão do Tailwind, então
-só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de tema.
+só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='dark']` e, em `system`, via
+`prefers-color-scheme`); componente nenhum tem classe `dark:`.
 
 | Token | Hex | Uso |
 |---|---|---|
@@ -122,7 +131,9 @@ só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de
 | surface / surface-strong | #F6F7F9 / #ECEEF2 | superfícies, hover |
 | ink / ink-muted / ink-subtle | #15181E / #585F6D / #808794 | texto principal, secundário, placeholder |
 | line / line-strong | #E3E6EB / #C8CDD5 | divisores, bordas de input |
-| accent / accent-hover / accent-soft | #2347D6 / #1B38B3 / #ECF0FD | ação, links, ativo, progresso |
+| accent / accent-hover / accent-soft | #2347D6 / #1B38B3 / #ECF0FD | links, ativo, detalhes (escuro: #5577E8 / #7892F0 / #0B1430) |
+| action / action-hover / action-contrast | claro = accent; escuro #F1F2F4 / #D5D8DE / #000 | botão primário e item selecionado |
+| panel | #FFFFFF (escuro #0B0C10) | painéis sobre o fundo pontilhado |
 | success, warning, danger (+ `-soft`) | #168054, #A05E00, #BE2E29 | só para estado real |
 
 - Tipografia: **Instrument Sans** (interface) e **Bricolage Grotesque** (só display: relógio e títulos de página), via Google Fonts no `app.head`.

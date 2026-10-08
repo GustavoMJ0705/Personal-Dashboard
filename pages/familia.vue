@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert } from 'lucide-vue-next'
+import { CircleAlert, Smile, UserPlus, Users } from 'lucide-vue-next'
 import { belongsTo } from '~/utils/family'
 
 useHead({ title: 'Família' })
@@ -44,24 +44,23 @@ function nextEventFor(memberId: string) {
       <UiButton variant="secondary" size="sm" @click="load()">Tentar de novo</UiButton>
     </div>
 
-    <div v-else-if="!family || !me" class="mt-8">
-      <p class="max-w-[34rem] text-base leading-relaxed text-ink-muted">
+    <section v-else-if="!family || !me" class="panel mt-8" aria-labelledby="criar-familia">
+      <UiSectionTitle id="criar-familia" title="Criar família" :icon="Users" />
+      <p class="mt-4 max-w-[34rem] text-base leading-relaxed text-ink-muted">
         Você ainda não faz parte de uma família. Crie uma para compartilhar tarefas e compromissos,
         ou peça para quem já tem uma te adicionar.
       </p>
       <FamilyCreateForm class="mt-6" />
-    </div>
+    </section>
 
-    <div v-else class="mt-8 flex flex-col gap-12">
-      <section aria-labelledby="meu-status">
-        <h2 id="meu-status" class="mb-4 text-lg font-semibold text-ink">Seu status</h2>
-        <FamilyMyStatus :member="me" :now="now" />
+    <div v-else class="mt-8 flex flex-col gap-5 md:gap-6">
+      <section aria-labelledby="meu-status" class="panel">
+        <UiSectionTitle id="meu-status" title="Seu status" :icon="Smile" />
+        <FamilyMyStatus class="mt-5" :member="me" :now="now" />
       </section>
 
-      <section aria-labelledby="membros">
-        <h2 id="membros" class="flex items-baseline gap-2 text-lg font-semibold text-ink">
-          Membros <span class="text-base font-normal tabular-nums text-ink-muted">{{ members.length }}</span>
-        </h2>
+      <section aria-labelledby="membros" class="panel">
+        <UiSectionTitle id="membros" title="Membros" :icon="Users" :count="members.length" />
         <p v-if="others.length === 0" class="mt-3 text-base text-ink-muted">
           Só você por enquanto.{{ isOwner ? ' Adicione alguém logo abaixo.' : '' }}
         </p>
@@ -78,9 +77,9 @@ function nextEventFor(memberId: string) {
         </ul>
       </section>
 
-      <section v-if="isOwner" aria-labelledby="adicionar-membro">
-        <h2 id="adicionar-membro" class="mb-3 text-lg font-semibold text-ink">Adicionar membro</h2>
-        <FamilyAddMember />
+      <section v-if="isOwner" aria-labelledby="adicionar-membro" class="panel">
+        <UiSectionTitle id="adicionar-membro" title="Adicionar membro" :icon="UserPlus" />
+        <FamilyAddMember class="mt-4" />
       </section>
     </div>
   </div>

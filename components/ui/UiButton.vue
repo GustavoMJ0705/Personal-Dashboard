@@ -13,7 +13,7 @@ const props = withDefaults(
 )
 
 const variantClass = {
-  'primary': 'bg-accent text-accent-contrast hover:bg-accent-hover',
+  'primary': 'bg-action text-action-contrast hover:bg-action-hover',
   'secondary': 'border border-line-strong bg-canvas text-ink hover:bg-surface',
   'ghost': 'text-ink-muted hover:bg-surface-strong hover:text-ink',
   'danger': 'bg-danger text-accent-contrast hover:bg-danger/90',

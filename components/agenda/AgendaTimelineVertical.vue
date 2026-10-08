@@ -62,7 +62,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
     tabindex="0"
     role="region"
     :aria-label="`Linha do tempo de ${dayLabel}. Role para cima e para baixo para ver outros horários.`"
-    class="max-h-[min(34rem,62dvh)] overflow-y-auto overscroll-y-contain rounded-lg border bg-canvas"
+    class="max-h-[min(34rem,62dvh)] overflow-y-auto overscroll-y-contain rounded-lg border bg-panel"
   >
     <div class="relative" :style="{ height: `${totalHeight}px` }">
       <div
@@ -98,7 +98,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
             :class="[
               compact(block.width) ? 'items-center' : 'items-start py-1.5',
               selectedId === block.event.id
-                ? 'border-accent bg-accent text-accent-contrast'
+                ? 'border-action bg-action text-action-contrast'
                 : isPast(block.event)
                   ? 'border-line bg-surface text-ink-muted hover:border-line-strong'
                   : 'border-accent/25 bg-accent-soft text-ink hover:border-accent',
@@ -112,12 +112,12 @@ watch(() => props.day, () => nextTick(scrollToFocus))
               :name="owner(block.event)!.name"
               :family="owner(block.event)!.family"
               size="sm"
-              :class="selectedId === block.event.id && 'bg-accent-contrast'"
+              :class="selectedId === block.event.id && 'bg-panel'"
             />
             <span class="min-w-0 flex-1 leading-tight">
               <span
                 class="truncate text-[13px] tabular-nums"
-                :class="[compact(block.width) ? 'mr-1.5 inline' : 'block', selectedId === block.event.id ? 'text-accent-contrast' : 'text-ink-muted']"
+                :class="[compact(block.width) ? 'mr-1.5 inline' : 'block', selectedId === block.event.id ? 'text-action-contrast' : 'text-ink-muted']"
               >{{ formatTime(new Date(block.event.starts_at)) }}</span>
               <span class="text-sm font-medium" :class="compact(block.width) ? 'inline' : 'line-clamp-2 break-words'">{{ block.event.title }}</span>
             </span>

@@ -47,9 +47,11 @@ const summary = computed(() => {
 
     <DashboardClock class="mt-5" :now="now" />
 
+    <DashboardDayRuler class="mt-6" :now="now" :today="today" :events="myTodayEvents" />
+
     <p v-if="summary" class="mt-6 max-w-[34rem] text-xl font-medium leading-snug text-ink md:text-2xl">{{ summary }}</p>
 
-    <div class="mt-12 flex flex-col gap-12 md:mt-14">
+    <div class="mt-10 flex flex-col gap-5 md:mt-12 md:gap-6">
       <DashboardTasks :today="today" :overdue="grouped.overdue" :due-today="grouped.today" />
       <DashboardEvents :events="myTodayEvents" :now="now" />
       <DashboardFamily :now="now" :today="today" :today-events="todayEvents" :open-tasks="openTasks" />

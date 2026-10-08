@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert } from 'lucide-vue-next'
+import { CircleAlert, ListChecks, Sparkles } from 'lucide-vue-next'
 import type { Task } from '~/types/models'
 
 defineProps<{
@@ -13,11 +13,12 @@ const editingId = ref<string | null>(null)
 </script>
 
 <template>
-  <section aria-labelledby="painel-tarefas-hoje">
-    <div class="flex items-baseline justify-between gap-4">
-      <h2 id="painel-tarefas-hoje" class="text-lg font-semibold text-ink">Tarefas</h2>
-      <NuxtLink to="/tarefas" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver todas</NuxtLink>
-    </div>
+  <section aria-labelledby="painel-tarefas-hoje" class="panel">
+    <UiSectionTitle id="painel-tarefas-hoje" title="Tarefas do dia" :icon="ListChecks">
+      <template #action>
+        <NuxtLink to="/tarefas" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver todas</NuxtLink>
+      </template>
+    </UiSectionTitle>
 
     <TaskQuickAdd :today="today" :with-due-date="false" class="mt-4" />
 
@@ -36,9 +37,12 @@ const editingId = ref<string | null>(null)
       <UiButton variant="secondary" size="sm" @click="load()">Tentar de novo</UiButton>
     </div>
 
-    <p v-else-if="overdue.length === 0 && dueToday.length === 0" class="mt-6 text-base text-ink-muted">
-      Nada para hoje. Se surgir alguma coisa, escreva no campo acima.
-    </p>
+    <UiEmptyState
+      v-else-if="overdue.length === 0 && dueToday.length === 0"
+      class="mt-6"
+      :icon="Sparkles"
+      text="Nada para hoje. Se surgir alguma coisa, escreva no campo acima."
+    />
 
     <div v-else class="mt-6 flex flex-col gap-6">
       <div v-if="overdue.length > 0">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert, MapPin } from 'lucide-vue-next'
+import { CalendarClock, CalendarDays, CircleAlert, MapPin } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
 import { isEventOngoing } from '~/utils/dashboard'
 import { audienceLabel } from '~/utils/family'
@@ -33,11 +33,12 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <section aria-labelledby="painel-compromissos">
-    <div class="flex items-baseline justify-between gap-4">
-      <h2 id="painel-compromissos" class="text-lg font-semibold text-ink">Compromissos de hoje</h2>
-      <NuxtLink to="/agenda" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver agenda</NuxtLink>
-    </div>
+  <section aria-labelledby="painel-compromissos" class="panel">
+    <UiSectionTitle id="painel-compromissos" title="Compromissos de hoje" :icon="CalendarClock">
+      <template #action>
+        <NuxtLink to="/agenda" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver agenda</NuxtLink>
+      </template>
+    </UiSectionTitle>
 
     <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando compromissos" class="mt-4 divide-y divide-line border-y">
       <div v-for="n in 2" :key="n" class="flex items-center gap-4 py-4">
@@ -54,7 +55,7 @@ const rows = computed(() =>
       <UiButton variant="secondary" size="sm" @click="load()">Tentar de novo</UiButton>
     </div>
 
-    <p v-else-if="rows.length === 0" class="mt-4 text-base text-ink-muted">Nenhum compromisso hoje.</p>
+    <UiEmptyState v-else-if="rows.length === 0" class="mt-4" :icon="CalendarDays" text="Nenhum compromisso hoje." />
 
     <ol v-else class="mt-4 flex flex-col">
       <li

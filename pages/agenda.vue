@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert, Plus } from 'lucide-vue-next'
+import { CalendarDays, CircleAlert, Plus } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
 import { type AgendaFilter, busyDays, daysBetween, eventsOnDay, matchesFilter, rangeForDays } from '~/utils/agenda'
 import type { Audience } from '~/utils/family'
@@ -162,13 +162,12 @@ function retry() {
         <UiButton variant="secondary" size="sm" @click="retry">Tentar de novo</UiButton>
       </div>
 
-      <div v-else-if="dayEvents.length === 0" class="flex flex-col items-start gap-3 rounded-lg border border-dashed border-line-strong px-5 py-6">
-        <p class="text-base text-ink-muted">{{ emptyText }}</p>
+      <UiEmptyState v-else-if="dayEvents.length === 0" class="bg-panel" :icon="CalendarDays" :text="emptyText">
         <UiButton v-if="!creating" variant="secondary" size="sm" @click="startCreating">
           <Plus class="size-4" aria-hidden="true" />
           Novo compromisso
         </UiButton>
-      </div>
+      </UiEmptyState>
 
       <div v-else class="flex flex-col gap-4">
         <AgendaAllDay v-if="allDay.length" :events="allDay" :selected-id="selectedId" @select="select" />

@@ -57,7 +57,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
     tabindex="0"
     role="region"
     :aria-label="`Linha do tempo de ${dayLabel}. Role para os lados para ver outros horários.`"
-    class="overflow-x-auto overscroll-x-contain rounded-lg border bg-canvas"
+    class="overflow-x-auto overscroll-x-contain rounded-lg border bg-panel"
   >
     <div class="relative" :style="{ width: `${totalWidth}px`, height: `${height}px` }">
       <div
@@ -96,7 +96,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
             type="button"
             class="flex size-full items-center gap-2 overflow-hidden rounded border px-2 text-left transition-colors disabled:cursor-wait"
             :class="selectedId === block.event.id
-              ? 'border-accent bg-accent text-accent-contrast'
+              ? 'border-action bg-action text-action-contrast'
               : isPast(block.event)
                 ? 'border-line bg-surface text-ink-muted hover:border-line-strong'
                 : 'border-accent/25 bg-accent-soft text-ink hover:border-accent'"
@@ -109,10 +109,10 @@ watch(() => props.day, () => nextTick(scrollToFocus))
               :name="owner(block.event)!.name"
               :family="owner(block.event)!.family"
               size="sm"
-              :class="selectedId === block.event.id && 'bg-accent-contrast'"
+              :class="selectedId === block.event.id && 'bg-panel'"
             />
             <span class="min-w-0 flex-1 leading-tight">
-              <span class="block truncate text-[13px] tabular-nums" :class="selectedId === block.event.id ? 'text-accent-contrast' : 'text-ink-muted'">
+              <span class="block truncate text-[13px] tabular-nums" :class="selectedId === block.event.id ? 'text-action-contrast' : 'text-ink-muted'">
                 {{ formatTime(new Date(block.event.starts_at)) }}
               </span>
               <span class="block truncate text-sm font-medium">{{ block.event.title }}</span>

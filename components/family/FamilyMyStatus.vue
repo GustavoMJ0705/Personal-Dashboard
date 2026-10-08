@@ -35,7 +35,7 @@ function saveNote() {
 </script>
 
 <template>
-  <div class="rounded-lg border p-4 md:p-5">
+  <div>
     <div class="flex items-start gap-3.5">
       <UiAvatar :name="member.display_name" size="lg" />
       <div class="min-w-0 flex-1">

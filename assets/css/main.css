@@ -2,9 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tokens de cor (triplas RGB). O tema escuro só redefine as variáveis:
+ * data-theme="dark" força o escuro; data-theme="system" segue o sistema operacional.
+ */
 @layer base {
   :root {
     --color-canvas: 255 255 255;
+    --color-panel: 255 255 255;
     --color-surface: 246 247 249;
     --color-surface-strong: 236 238 242;
     --color-ink: 21 24 30;
@@ -16,6 +21,9 @@
     --color-accent-hover: 27 56 179;
     --color-accent-soft: 236 240 253;
     --color-accent-contrast: 255 255 255;
+    --color-action: 35 71 214;
+    --color-action-hover: 27 56 179;
+    --color-action-contrast: 255 255 255;
     --color-success: 22 128 84;
     --color-success-soft: 231 244 238;
     --color-warning: 160 94 0;
@@ -23,7 +31,72 @@
     --color-danger: 190 46 41;
     --color-danger-soft: 252 236 235;
 
+    --dot-color: rgb(var(--color-line-strong) / 0.7);
+    --glow-color: rgb(var(--color-accent) / 0.07);
+
     color-scheme: light;
+  }
+
+  :root[data-theme='dark'] {
+    --color-canvas: 0 0 0;
+    --color-panel: 11 12 16;
+    --color-surface: 18 20 25;
+    --color-surface-strong: 28 31 38;
+    --color-ink: 241 242 244;
+    --color-ink-muted: 164 170 182;
+    --color-ink-subtle: 118 124 136;
+    --color-line: 32 35 42;
+    --color-line-strong: 53 57 67;
+    --color-accent: 85 119 232;
+    --color-accent-hover: 120 146 240;
+    --color-accent-soft: 11 20 48;
+    --color-accent-contrast: 255 255 255;
+    --color-action: 241 242 244;
+    --color-action-hover: 213 216 222;
+    --color-action-contrast: 0 0 0;
+    --color-success: 63 178 127;
+    --color-success-soft: 10 38 26;
+    --color-warning: 224 163 58;
+    --color-warning-soft: 42 30 8;
+    --color-danger: 240 96 90;
+    --color-danger-soft: 48 15 14;
+
+    --dot-color: rgb(var(--color-line-strong) / 0.85);
+    --glow-color: rgb(var(--color-accent) / 0.16);
+
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme='system'] {
+      --color-canvas: 0 0 0;
+      --color-panel: 11 12 16;
+      --color-surface: 18 20 25;
+      --color-surface-strong: 28 31 38;
+      --color-ink: 241 242 244;
+      --color-ink-muted: 164 170 182;
+      --color-ink-subtle: 118 124 136;
+      --color-line: 32 35 42;
+      --color-line-strong: 53 57 67;
+      --color-accent: 85 119 232;
+      --color-accent-hover: 120 146 240;
+      --color-accent-soft: 11 20 48;
+      --color-accent-contrast: 255 255 255;
+      --color-action: 241 242 244;
+      --color-action-hover: 213 216 222;
+      --color-action-contrast: 0 0 0;
+      --color-success: 63 178 127;
+      --color-success-soft: 10 38 26;
+      --color-warning: 224 163 58;
+      --color-warning-soft: 42 30 8;
+      --color-danger: 240 96 90;
+      --color-danger-soft: 48 15 14;
+
+      --dot-color: rgb(var(--color-line-strong) / 0.85);
+      --glow-color: rgb(var(--color-accent) / 0.16);
+
+      color-scheme: dark;
+    }
   }
 
   html {
@@ -34,6 +107,27 @@
   body {
     @apply bg-canvas font-sans text-ink antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Fundo de caderno pontilhado, sumindo para baixo, e um brilho azul discreto no topo. */
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  body::before {
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1.3px);
+    background-size: 22px 22px;
+    background-position: 11px 11px;
+    mask-image: linear-gradient(to bottom, black 0%, rgb(0 0 0 / 0.55) 45%, transparent 85%);
+  }
+
+  body::after {
+    background: radial-gradient(60rem 28rem at 70% -8rem, var(--glow-color), transparent 70%);
   }
 
   :focus-visible {
@@ -59,5 +153,12 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+@layer components {
+  /* Painel sólido sobre o fundo pontilhado: agrupa uma seção. */
+  .panel {
+    @apply rounded-lg border bg-panel p-4 md:p-6;
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert } from 'lucide-vue-next'
+import { CircleAlert, Users } from 'lucide-vue-next'
 import type { AgendaEvent, FamilyMember, Task } from '~/types/models'
 import { belongsTo } from '~/utils/family'
 
@@ -35,11 +35,12 @@ async function choose(next: Parameters<typeof setMyStatus>[0]) {
 </script>
 
 <template>
-  <section aria-labelledby="painel-familia">
-    <div class="flex items-baseline justify-between gap-4">
-      <h2 id="painel-familia" class="text-lg font-semibold text-ink">Família</h2>
-      <NuxtLink v-if="family" to="/familia" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver família</NuxtLink>
-    </div>
+  <section aria-labelledby="painel-familia" class="panel">
+    <UiSectionTitle id="painel-familia" title="Família" :icon="Users">
+      <template #action>
+        <NuxtLink v-if="family" to="/familia" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver família</NuxtLink>
+      </template>
+    </UiSectionTitle>
 
     <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando família" class="mt-4 flex flex-col gap-4">
       <div v-for="n in 2" :key="n" class="flex items-center gap-3.5">
@@ -56,10 +57,9 @@ async function choose(next: Parameters<typeof setMyStatus>[0]) {
       <UiButton variant="secondary" size="sm" @click="load()">Tentar de novo</UiButton>
     </div>
 
-    <div v-else-if="!family" class="mt-4 flex flex-col items-start gap-3">
-      <p class="text-base text-ink-muted">Você ainda não faz parte de uma família.</p>
+    <UiEmptyState v-else-if="!family" class="mt-4" :icon="Users" text="Você ainda não faz parte de uma família.">
       <NuxtLink to="/familia" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Criar família</NuxtLink>
-    </div>
+    </UiEmptyState>
 
     <ul v-else class="mt-2 divide-y divide-line border-y">
       <FamilyMemberRow

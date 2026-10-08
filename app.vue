@@ -2,6 +2,8 @@
 useHead({
   titleTemplate: (title) => (title ? `${title} | Misumoto` : 'Misumoto'),
 })
+
+useTheme().apply()
 </script>
 
 <template>

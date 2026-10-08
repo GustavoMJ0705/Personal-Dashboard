@@ -15,7 +15,7 @@ const emit = defineEmits<{ select: [event: AgendaEvent] }>()
       type="button"
       class="inline-flex h-9 max-w-full items-center rounded-sm border px-3 text-sm font-medium transition-colors"
       :class="selectedId === event.id
-        ? 'border-accent bg-accent text-accent-contrast'
+        ? 'border-action bg-action text-action-contrast'
         : 'border-accent/25 bg-accent-soft text-ink hover:border-accent'"
       :aria-pressed="selectedId === event.id"
       @click="emit('select', event)"

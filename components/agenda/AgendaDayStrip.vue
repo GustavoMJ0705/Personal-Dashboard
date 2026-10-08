@@ -98,7 +98,7 @@ defineExpose({ center })
           type="button"
           class="relative flex h-[4.25rem] w-12 flex-col items-center justify-center rounded transition-colors"
           :class="item.day === selected
-            ? 'bg-accent text-accent-contrast'
+            ? 'bg-action text-action-contrast'
             : item.day === today
               ? 'text-accent hover:bg-accent-soft'
               : 'text-ink hover:bg-surface'"
@@ -109,12 +109,12 @@ defineExpose({ center })
         >
           <span
             class="text-[13px] font-medium"
-            :class="item.day === selected ? 'text-accent-contrast' : item.month ? 'text-accent' : 'text-ink-muted'"
+            :class="item.day === selected ? 'text-action-contrast' : item.month ? 'text-accent' : 'text-ink-muted'"
           >{{ item.month ?? item.weekday }}</span>
           <span class="font-display text-xl font-semibold leading-tight tabular-nums">{{ item.number }}</span>
           <span
             class="mt-0.5 size-1 rounded-full"
-            :class="busy.has(item.day) ? (item.day === selected ? 'bg-accent-contrast' : 'bg-accent') : 'bg-transparent'"
+            :class="busy.has(item.day) ? (item.day === selected ? 'bg-action-contrast' : 'bg-accent') : 'bg-transparent'"
             aria-hidden="true"
           />
         </button>
