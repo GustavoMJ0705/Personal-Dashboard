@@ -1,8 +1,15 @@
-# Misumoto — site pessoal de organização
+# Misumoto — organização pessoal e da família
 
-Site de uso próprio para organizar tarefas, horários, compromissos e lembretes.
-Single-user: sem times, permissões, convites ou onboarding. O login existe só para
-proteger o acesso. Uso diário em desktop e celular.
+Site para organizar tarefas, horários, compromissos e lembretes, meus e da minha família.
+Cada familiar tem login próprio. Não há cadastro aberto nem convite por e-mail: eu crio as
+contas no painel do Supabase e depois adiciono a pessoa à família pelo site.
+Uso diário em desktop e celular.
+
+- Um usuário pertence a no máximo uma família. A família tem um dono (owner), que adiciona e remove membros.
+- Tarefas e compromissos podem ser **pessoais** (só quem criou vê), **atribuídos a um familiar** ou **da família toda**.
+- Itens compartilhados: qualquer membro edita e conclui; só quem criou exclui ou deixa de compartilhar.
+- Lembretes continuam pessoais.
+- Cada membro tem um status manual (em casa, trabalhando, estudando, viajando, fora) com nota opcional.
 
 ## Stack (não trocar nem adicionar biblioteca sem perguntar)
 
@@ -36,8 +43,17 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
 
 - Conta criada direto no supabase.com, não pelo Marketplace da Vercel. Chaves como env vars na Vercel.
 - `service_role` / secret key **nunca** em código de cliente. Só em server routes ou Edge Functions.
-- **RLS ligado em toda tabela, sem exceção.** Toda tabela tem `user_id uuid not null default auth.uid() references auth.users on delete cascade`
-  e quatro policies (select/insert/update/delete) `to authenticated` comparando `(select auth.uid()) = user_id`. Tabela sem RLS é bug.
+- **RLS ligado em toda tabela, sem exceção.** Tabela sem RLS é bug. Toda tabela tem `user_id uuid references auth.users`
+  (dono/criador da linha) e policies `to authenticated`:
+  - dados pessoais: `(select auth.uid()) = user_id`;
+  - dados compartilhados (`family_id` preenchido): `private.is_family_member(family_id)`.
+- Funções auxiliares das policies ficam no schema `private` (fora da API), com `security definer`,
+  `stable` e `set search_path = ''`, para evitar recursão de RLS entre `family_members` e as outras tabelas.
+- Escritas que mexem em mais de uma tabela ou leem `auth.users` (criar família, adicionar membro) são RPCs
+  `security definer` em `public`, com a checagem de permissão dentro da função. Por isso `families` e
+  `family_members` não têm policy de insert.
+- Colunas que o cliente não pode mudar (`user_id`, `family_id` de membro, `role`) ficam protegidas por grant
+  de coluna: `revoke update` na tabela e `grant update (colunas permitidas)`.
 - Schema só por migration versionada em `supabase/migrations/`, nunca pelo painel.
 - Timestamps em `timestamptz` (UTC). Conversão para America/Sao_Paulo só na exibição.
 - Tipos gerados pelo CLI, nunca escritos à mão: `npm run db:types`
@@ -45,7 +61,10 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
   Aliases legíveis (`Task`, `TaskPriority`...) ficam em `types/models.ts`, derivados do arquivo gerado.
 - Cadastro aberto desligado: `enable_signup = false` em `supabase/config.toml` (local) e, em produção,
   desligar "Allow new users to sign up" no painel e criar o único usuário em Authentication → Users.
-- Realtime só em `tasks` (concluir no celular reflete no desktop). Nas outras tabelas, só se houver motivo real.
+- Realtime em `tasks`, `events` e `family_members`: com família, outra pessoa pode mudar o que eu vejo.
+  Os canais não filtram por `user_id`; o RLS já limita o que chega a cada um.
+- Testes de RLS em `supabase/tests/*.sql`: rodam numa transação com `rollback`, simulando usuários via
+  `request.jwt.claims`. Toda mudança de policy precisa de teste.
 
 ## Modelo de dados
 
@@ -53,22 +72,31 @@ Todas as tabelas: `id uuid default gen_random_uuid()`, `user_id`, `created_at`, 
 (trigger `public.set_updated_at()`), RLS por `auth.uid()`.
 
 - `tasks`: `title`, `description`, `due_date date` (dia civil, sem hora), `priority public.task_priority`
-  (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`
-- `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`
-- `reminders`: `title`, `remind_at`, `channel text`, `sent_at`; índice parcial em `remind_at where sent_at is null` para o pg_cron
+  (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`,
+  `family_id`, `assignee_id`
+- `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_id`
+- `reminders`: `title`, `remind_at`, `channel text`, `sent_at`; índice parcial em `remind_at where sent_at is null` para o pg_cron. Sempre pessoal.
+- `families`: `user_id` (dono), `name`
+- `family_members`: `family_id`, `user_id` (unique: uma família por usuário), `display_name`, `role` (`owner | member`),
+  `status` (`at_home | working | studying | traveling | out`), `status_note`, `status_updated_at` (trigger)
 
-A migration inicial está em `supabase/migrations/20261008190000_initial_schema.sql`, testada num Postgres:
-RLS isola usuários, anon não lê nada e inserir com `user_id` de outro usuário é bloqueado.
+Em `tasks` e `events`: `family_id` nulo = pessoal. `family_id` preenchido e `assignee_id` nulo = família toda.
+`assignee_id` preenchido = atribuído àquele familiar (precisa ser membro da mesma família).
+
+RPCs: `create_family(family_name, member_display_name)`, `add_family_member(member_email, member_display_name)` (só o dono).
+
+Migrations em `supabase/migrations/`; testes de RLS em `supabase/tests/`.
 
 ## Escopo (não construir nada fora disso sem eu pedir)
 
 1. Autenticação: login e logout, sem cadastro
-2. Dashboard do dia: tarefas de hoje (com atrasadas) + próximos compromissos
-3. Tarefas: criar, concluir, editar, excluir, adiar
-4. Agenda: visão por dia e por semana
-5. Lembretes com data e hora, disparados por `pg_cron`
+2. Início: saudação, relógio, tarefas do dia (minhas, atribuídas a mim e da família toda), compromissos do dia e situação da família
+3. Tarefas: criar, concluir, editar, excluir, adiar, com "Para quem"
+4. Agenda horizontal: faixa de dias rolável + linha do tempo do dia (horas da esquerda para a direita), filtro por familiar
+5. Família: criar família, meu status, membros, adicionar e remover membro (dono)
+6. Lembretes com data e hora, disparados por `pg_cron`
 
-**O canal dos lembretes ainda não foi decidido** (e-mail? push? outro?). Perguntar antes de implementar o item 5.
+**O canal dos lembretes ainda não foi decidido** (e-mail? push? outro?). Perguntar antes de implementar o item 6.
 
 ## Skills
 
@@ -105,10 +133,14 @@ só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de
 - Mobile: barra de abas fixa embaixo (respeitar `env(safe-area-inset-bottom)`). Desktop (md+): trilho lateral fixo à esquerda com wordmark, navegação e "Sair".
 - Conteúdo em coluna única, `max-w` ~44rem, alinhado à esquerda.
 - Só mostrar na navegação as telas que já existem.
-- **Dashboard (a peça marcante, o resto fica quieto):** a hora atual grande em Bricolage, com numerais tabulares,
-  a data por extenso ("quinta-feira, 8 de outubro") e uma frase que responde "o que fazer agora"
-  (ex.: "3 tarefas para hoje. Próximo compromisso às 17:00: Dentista."). Abaixo: tarefas de hoje e atrasadas
-  com criação rápida inline, e depois os próximos compromissos.
+- Navegação: Início, Agenda, Tarefas, Família.
+- **Início (a peça marcante, o resto fica quieto):** saudação pelo horário com o meu nome ("Boa tarde, Gustavo"),
+  a hora atual grande em Bricolage com numerais tabulares, a data por extenso e uma frase que responde
+  "o que fazer agora". Abaixo: tarefas do dia, compromissos do dia (próximo em destaque) e situação da família.
+- **Agenda:** faixa de dias rolável (scroll-snap) no topo; abaixo, a linha do tempo do dia com 00h–24h na horizontal,
+  linha de "agora", blocos posicionados pelo horário e faixas para sobreposições. Dia inteiro numa faixa própria.
+  Detalhes e edição inline abaixo da linha do tempo. Sem cor por pessoa: quem é o dono aparece pelo avatar de iniciais.
+- Itens compartilhados mostram para quem são ("Para Ana", "Família"); pessoais não mostram nada.
 - Tarefas como linhas de lista com divisores, não um grid de cards.
 - Evitar: labels em CAIXA ALTA, eyebrow acima de título, "→" em botão, metadados separados por "·".
 
@@ -118,7 +150,7 @@ só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de
 - A tela inicial responde "o que preciso fazer agora" sem clique.
 - Criar, concluir e adiar tarefa em no máximo dois toques. "Adiar" = para o dia seguinte ao vencimento (ou a amanhã, se já venceu).
 - Updates otimistas com rollback e toast de erro se o Supabase falhar. No create otimista, usar id temporário e trocar pela linha real; deduplicar por id, porque o eco do Realtime pode chegar antes da resposta.
-- Ao voltar o app para primeiro plano (`visibilitychange`), recarregar as tarefas em silêncio: o canal do Realtime cai em segundo plano no celular.
+- Ao voltar o app para primeiro plano (`visibilitychange`), recarregar em silêncio (tarefas, agenda, família): o canal do Realtime cai em segundo plano no celular.
 - Relógio: estado inicial vindo do servidor (`useState`) para não quebrar a hidratação, atualizando a cada virada de minuto no cliente.
 - Estados vazio, carregando e erro sempre tratados. Nunca tela em branco.
 - Nada de modal para fluxo que cabe inline (editar tarefa = expandir a linha; excluir = confirmação inline).
@@ -127,7 +159,7 @@ só os tokens existem. Dark mode depois = redefinir as variáveis num seletor de
 ## Padrões de código
 
 - Componentes pequenos e de responsabilidade única. Pastas `components/app`, `ui`, `tasks`, `dashboard`...
-- Estado e acesso a dados em composables (`useTasks`, `useUpcomingEvents`, `useAuth`, `useToast`, `useNow`).
+- Estado e acesso a dados em composables (`useTasks`, `useAgenda`, `useDayEvents`, `useFamily`, `useAuth`, `useToast`, `useNow`).
   **Nenhum componente chama o Supabase direto.**
 - Estado compartilhado com `useState` por chave. Limpar com `clearNuxtState` no logout.
 - Código em inglês; textos da interface em português do Brasil.
