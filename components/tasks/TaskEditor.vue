@@ -2,7 +2,7 @@
 import { Trash2 } from 'lucide-vue-next'
 import type { Task, TaskPriority } from '~/types/models'
 import { taskAudienceColumns, taskAudienceOf } from '~/utils/family'
-import { PRIORITY_LABEL } from '~/utils/tasks'
+import { PRIORITY_LABEL, dueAtFor, taskTime } from '~/utils/tasks'
 
 const props = defineProps<{ task: Task }>()
 const emit = defineEmits<{ close: [] }>()
@@ -15,6 +15,7 @@ const form = reactive({
   title: props.task.title,
   description: props.task.description ?? '',
   due_date: props.task.due_date ?? '',
+  due_time: taskTime(props.task) ?? '',
   priority: props.task.priority,
   audience: taskAudienceOf(props.task),
 })
@@ -41,6 +42,7 @@ function save() {
     title,
     description: form.description.trim() || null,
     due_date: form.due_date || null,
+    due_at: dueAtFor(form.due_date || null, form.due_time || null),
     priority: form.priority,
     ...taskAudienceColumns(form.audience, family.value?.id ?? props.task.family_id),
   })
@@ -85,7 +87,16 @@ function confirmDelete() {
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row">
-      <UiTextField :id="fieldId('data')" v-model="form.due_date" label="Vencimento" type="date" class="sm:w-48" />
+      <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3 sm:w-80">
+        <UiTextField :id="fieldId('data')" v-model="form.due_date" label="Vencimento" type="date" />
+        <UiTextField
+          :id="fieldId('hora')"
+          v-model="form.due_time"
+          label="Horário"
+          type="time"
+          :disabled="!form.due_date"
+        />
+      </div>
 
       <fieldset>
         <legend class="mb-1.5 block text-sm font-medium text-ink">Prioridade</legend>

@@ -75,7 +75,8 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
 Todas as tabelas: `id uuid default gen_random_uuid()`, `user_id`, `created_at`, `updated_at`
 (trigger `public.set_updated_at()`), RLS por `auth.uid()`.
 
-- `tasks`: `title`, `description`, `due_date date` (dia civil, sem hora), `priority public.task_priority`
+- `tasks`: `title`, `description`, `due_date date` (dia civil), `due_at timestamptz` (horário opcional; check garante
+  que cai no mesmo `due_date` em São Paulo e que não existe sem data), `priority public.task_priority`
   (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`,
   `family_id`, `assignee_ids uuid[]` (default `{}`)
 - `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_id`
@@ -166,7 +167,8 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 
 - Mobile-first; tudo funciona em 375px.
 - A tela inicial responde "o que preciso fazer agora" sem clique.
-- Criar, concluir e adiar tarefa em no máximo dois toques. "Adiar" = para o dia seguinte ao vencimento (ou a amanhã, se já venceu).
+- Criar, concluir e adiar tarefa em no máximo dois toques. "Adiar" = para o dia seguinte ao vencimento (ou a amanhã, se já venceu),
+  mantendo o horário. Dentro do dia, tarefas com horário vêm primeiro, em ordem de hora; horário que já passou fica em `danger`.
 - Updates otimistas com rollback e toast de erro se o Supabase falhar. No create otimista, usar id temporário e trocar pela linha real; deduplicar por id, porque o eco do Realtime pode chegar antes da resposta.
 - Ao voltar o app para primeiro plano (`visibilitychange`), recarregar em silêncio (tarefas, agenda, família): o canal do Realtime cai em segundo plano no celular.
 - Relógio: estado inicial vindo do servidor (`useState`) para não quebrar a hidratação, atualizando a cada virada de minuto no cliente.

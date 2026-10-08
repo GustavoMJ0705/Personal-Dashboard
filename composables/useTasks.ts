@@ -1,20 +1,21 @@
 import type { RealtimeChannel, RealtimePostgresChangesPayload, SupabaseClient } from '@supabase/supabase-js'
 import type { Task, TaskPriority } from '~/types/models'
 import { addDaysToCivilDate, formatCivilDate, toCivilDate } from '~/utils/datetime'
-import { postponeTarget } from '~/utils/tasks'
+import { dueAtFor, postponeTarget, taskTime } from '~/utils/tasks'
 
 export type TasksStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 export interface TaskDraft {
   title: string
   due_date: string | null
+  due_at?: string | null
   description?: string | null
   priority?: TaskPriority
   family_id?: string | null
   assignee_ids?: string[]
 }
 
-export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'priority' | 'family_id' | 'assignee_ids'>
+export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'due_at' | 'priority' | 'family_id' | 'assignee_ids'>
 type TaskPatch = Partial<TaskEdit & Pick<Task, 'completed_at'>>
 
 const TEMP_PREFIX = 'temp-'
@@ -165,6 +166,7 @@ export function useTasks() {
       title,
       description: draft.description ?? null,
       due_date: draft.due_date,
+      due_at: draft.due_date ? draft.due_at ?? null : null,
       priority: draft.priority ?? 'normal',
       family_id: draft.family_id ?? null,
       assignee_ids: draft.assignee_ids ?? [],
@@ -180,6 +182,7 @@ export function useTasks() {
         title,
         description: temp.description,
         due_date: temp.due_date,
+        due_at: temp.due_at,
         priority: temp.priority,
         family_id: temp.family_id,
         assignee_ids: temp.assignee_ids,
@@ -240,7 +243,11 @@ export function useTasks() {
   async function postpone(task: Task) {
     const today = toCivilDate(new Date())
     const target = postponeTarget(task.due_date, today)
-    const ok = await patch(task, { due_date: target }, 'Não foi possível adiar a tarefa. Tente de novo.')
+    const ok = await patch(
+      task,
+      { due_date: target, due_at: dueAtFor(target, taskTime(task)) },
+      'Não foi possível adiar a tarefa. Tente de novo.',
+    )
     if (ok) {
       toast.success(target === addDaysToCivilDate(today, 1) ? 'Adiada para amanhã.' : `Adiada para ${formatCivilDate(target)}.`)
     }

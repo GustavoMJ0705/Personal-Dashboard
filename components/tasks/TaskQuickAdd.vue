@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Clock3, Plus } from 'lucide-vue-next'
 import { addDaysToCivilDate } from '~/utils/datetime'
 import { type TaskAudience, taskAudienceColumns } from '~/utils/family'
+import { dueAtFor } from '~/utils/tasks'
 
 const props = withDefaults(defineProps<{ today: string, withDueDate?: boolean }>(), { withDueDate: true })
 
@@ -11,6 +12,7 @@ const audience = ref<TaskAudience>({ kind: 'me' })
 
 const title = ref('')
 const due = ref(props.today)
+const time = ref('')
 const input = ref<HTMLInputElement>()
 
 const tomorrow = computed(() => addDaysToCivilDate(props.today, 1))
@@ -30,11 +32,14 @@ watch(
 async function submit() {
   const value = title.value.trim()
   if (!value) return
+  const dueAt = props.withDueDate ? dueAtFor(due.value || null, time.value || null) : null
   title.value = ''
+  time.value = ''
   input.value?.focus()
   const ok = await create({
     title: value,
     due_date: props.withDueDate ? due.value || null : props.today,
+    due_at: dueAt,
     ...taskAudienceColumns(audience.value, family.value?.id ?? null),
   })
   if (!ok && !title.value) title.value = value
@@ -81,6 +86,21 @@ async function submit() {
         class="h-8 rounded-sm bg-transparent px-2 text-base text-ink-muted transition-colors hover:bg-surface"
         :class="due && due !== today && due !== tomorrow && 'bg-accent-soft text-accent'"
       >
+      <label
+        for="nova-tarefa-hora"
+        class="inline-flex h-8 items-center gap-1 rounded-sm pl-2 transition-colors"
+        :class="[time ? 'bg-accent-soft text-accent' : 'text-ink-muted hover:bg-surface', !due && 'opacity-50']"
+      >
+        <Clock3 class="size-4 shrink-0" aria-hidden="true" />
+        <span class="sr-only">Horário (opcional)</span>
+        <input
+          id="nova-tarefa-hora"
+          v-model="time"
+          type="time"
+          :disabled="!due"
+          class="h-8 bg-transparent pr-2 text-base disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:hidden"
+        >
+      </label>
     </fieldset>
 
     <div v-if="withDueDate && family" class="border-t px-2.5 py-2">

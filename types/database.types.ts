@@ -167,6 +167,7 @@ export type Database = {
           completed_at: string | null;
           created_at: string;
           description: string | null;
+          due_at: string | null;
           due_date: string | null;
           family_id: string | null;
           id: string;
@@ -181,6 +182,7 @@ export type Database = {
           completed_at?: string | null;
           created_at?: string;
           description?: string | null;
+          due_at?: string | null;
           due_date?: string | null;
           family_id?: string | null;
           id?: string;
@@ -194,6 +196,7 @@ export type Database = {
           completed_at?: string | null;
           created_at?: string;
           description?: string | null;
+          due_at?: string | null;
           due_date?: string | null;
           family_id?: string | null;
           id?: string;

@@ -1,5 +1,5 @@
 import type { Task, TaskPriority } from '~/types/models'
-import { addDaysToCivilDate } from './datetime'
+import { addDaysToCivilDate, formatTime, zonedToDate } from './datetime'
 
 export type OpenGroupKey = 'overdue' | 'today' | 'tomorrow' | 'upcoming' | 'undated'
 export type TaskRowContext = OpenGroupKey | 'completed'
@@ -25,6 +25,11 @@ function compareOpen(a: Task, b: Task) {
     if (a.due_date === null) return 1
     if (b.due_date === null) return -1
     return a.due_date < b.due_date ? -1 : 1
+  }
+  if (a.due_at !== b.due_at) {
+    if (a.due_at === null) return 1
+    if (b.due_at === null) return -1
+    return Date.parse(a.due_at) - Date.parse(b.due_at)
   }
   const byPriority = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
   if (byPriority !== 0) return byPriority
@@ -52,4 +57,15 @@ export function sortCompletedTasks(tasks: readonly Task[]): Task[] {
 /** Adiar: dia seguinte ao vencimento, ou amanhã se já venceu ou não tem data. */
 export function postponeTarget(due: string | null, today: string): string {
   return addDaysToCivilDate(due !== null && due > today ? due : today, 1)
+}
+
+/** Instante da tarefa com hora: dia civil + "HH:mm" em São Paulo. Sem data ou sem hora, null. */
+export function dueAtFor(date: string | null, time: string | null): string | null {
+  if (!date || !time) return null
+  return zonedToDate(date, time).toISOString()
+}
+
+/** "14:30" para tarefas com hora; null para as que não têm. */
+export function taskTime(task: Pick<Task, 'due_at'>): string | null {
+  return task.due_at ? formatTime(new Date(task.due_at)) : null
 }
