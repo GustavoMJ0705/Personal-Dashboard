@@ -15,12 +15,23 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ select: [event: AgendaEvent], pickDay: [day: string] }>()
 
-const HOUR_HEIGHT = 48
-const MIN_BLOCK_HEIGHT = 24
+// As 24 horas cabem na tela: a altura da hora acompanha o espaço que sobra abaixo do cabeçalho.
+const MIN_HOUR_HEIGHT = 14
+const MAX_HOUR_HEIGHT = 48
+const BOTTOM_GAP = 24
 const hours = Array.from({ length: 24 }, (_, h) => h)
-const totalHeight = 24 * HOUR_HEIGHT
 
-const scroller = ref<HTMLElement>()
+const body = ref<HTMLElement>()
+const hourHeight = ref(22)
+const totalHeight = computed(() => 24 * hourHeight.value)
+const showEveryHour = computed(() => hourHeight.value >= 22)
+
+function fitToScreen() {
+  const el = body.value
+  if (!el) return
+  const available = window.innerHeight - el.getBoundingClientRect().top - BOTTOM_GAP
+  hourHeight.value = Math.max(MIN_HOUR_HEIGHT, Math.min(MAX_HOUR_HEIGHT, Math.floor(available / 24)))
+}
 const owner = useEventOwner()
 
 const columns = computed(() => {
@@ -35,7 +46,7 @@ const columns = computed(() => {
       number: Number(day.slice(8)),
       label: full.format(date),
       allDay: all.filter((event) => event.all_day),
-      blocks: layoutTimeline(all.filter((event) => !event.all_day), day, HOUR_HEIGHT, MIN_BLOCK_HEIGHT).blocks,
+      blocks: layoutTimeline(all.filter((event) => !event.all_day), day, hourHeight.value, Math.max(16, hourHeight.value * 0.8)).blocks,
     }
   })
 })
@@ -43,7 +54,7 @@ const hasAllDay = computed(() => columns.value.some((column) => column.allDay.le
 
 const nowTop = computed(() => {
   const [h = 0, m = 0] = formatTime(props.now).split(':').map(Number)
-  return ((h * 60 + m) / 60) * HOUR_HEIGHT
+  return ((h * 60 + m) / 60) * hourHeight.value
 })
 
 const isPast = (event: AgendaEvent) => eventEndMs(event) < props.now.getTime()
@@ -58,15 +69,12 @@ function blockStyle(block: { lane: number, groupLanes: number, left: number, wid
   }
 }
 
-function scrollToFocus() {
-  const box = scroller.value
-  if (!box) return
-  const target = props.days.includes(props.today) ? nowTop.value : 8 * HOUR_HEIGHT
-  box.scrollTo({ top: Math.max(0, target - HOUR_HEIGHT * 1.5), behavior: 'auto' })
-}
-
-onMounted(scrollToFocus)
-watch(() => props.days[0], () => nextTick(scrollToFocus))
+onMounted(() => {
+  fitToScreen()
+  window.addEventListener('resize', fitToScreen)
+})
+onBeforeUnmount(() => window.removeEventListener('resize', fitToScreen))
+watch(() => props.events.some((event) => event.all_day), () => nextTick(fitToScreen))
 </script>
 
 <template>
@@ -110,23 +118,21 @@ watch(() => props.days[0], () => nextTick(scrollToFocus))
       </div>
     </div>
 
-    <div
-      ref="scroller"
-      tabindex="0"
-      role="region"
-      :aria-label="`Horários da semana de ${label}. Role para cima e para baixo.`"
-      class="scrollbar-accent max-h-[36rem] overflow-y-auto overscroll-y-contain"
-    >
+    <div ref="body" role="region" :aria-label="`Horários da semana de ${label}`">
       <div class="relative grid grid-cols-[3rem_repeat(7,minmax(0,1fr))]" :style="{ height: `${totalHeight}px` }">
         <div
           v-for="hour in hours"
           :key="hour"
           class="pointer-events-none absolute inset-x-0 border-t border-line"
           :class="hour === 0 && 'border-t-0'"
-          :style="{ top: `${hour * HOUR_HEIGHT}px` }"
+          :style="{ top: `${hour * hourHeight}px` }"
           aria-hidden="true"
         >
-          <span class="absolute left-1.5 top-0.5 text-[11px] font-medium tabular-nums text-ink-muted">{{ String(hour).padStart(2, '0') }}h</span>
+          <span
+            v-if="showEveryHour || hour % 2 === 0"
+            class="absolute left-1.5 top-0 text-[11px] font-medium leading-none tabular-nums text-ink-muted"
+            :class="hourHeight >= 22 && 'top-0.5'"
+          >{{ String(hour).padStart(2, '0') }}h</span>
         </div>
 
         <span aria-hidden="true" />
@@ -149,17 +155,20 @@ watch(() => props.days[0], () => nextTick(scrollToFocus))
             <li v-for="block in column.blocks" :key="eventKey(block.event)" class="absolute z-10" :style="blockStyle(block)">
               <button
                 type="button"
-                class="flex size-full flex-col overflow-hidden rounded border px-1.5 py-0.5 text-left transition-colors disabled:cursor-wait"
-                :class="selectedId === block.event.id
-                  ? 'border-action bg-action text-action-contrast'
-                  : isPast(block.event)
-                    ? 'border-line bg-surface text-ink-muted hover:border-line-strong'
-                    : 'border-accent/25 bg-accent-soft text-ink hover:border-accent'"
+                class="flex size-full overflow-hidden rounded border px-1.5 text-left transition-colors disabled:cursor-wait"
+                :class="[
+                  block.width >= 34 ? 'flex-col py-0.5' : 'items-center gap-1',
+                  selectedId === block.event.id
+                    ? 'border-action bg-action text-action-contrast'
+                    : isPast(block.event)
+                      ? 'border-line bg-surface text-ink-muted hover:border-line-strong'
+                      : 'border-accent/25 bg-accent-soft text-ink hover:border-accent',
+                ]"
                 :aria-pressed="selectedId === block.event.id"
                 :disabled="isTempEvent(block.event)"
                 @click="emit('select', block.event)"
               >
-                <span class="truncate text-[11px] tabular-nums" :class="selectedId === block.event.id ? 'text-action-contrast' : 'text-ink-muted'">
+                <span class="shrink-0 truncate text-[11px] tabular-nums" :class="selectedId === block.event.id ? 'text-action-contrast' : 'text-ink-muted'">
                   {{ formatTime(new Date(block.event.starts_at)) }}
                 </span>
                 <span class="truncate text-xs font-medium leading-tight">{{ block.event.title }}</span>
