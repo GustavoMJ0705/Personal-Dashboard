@@ -18,7 +18,7 @@ export async function stopFamilySync(client: SupabaseClient<any>) {
 }
 
 const RPC_ERRORS: Record<string, string> = {
-  user_not_found: 'Não existe conta com esse e-mail. Crie a conta no painel do Supabase e tente de novo.',
+  user_not_found: 'Não existe conta com esse e-mail. Peça para a pessoa criar a conta primeiro.',
   already_in_family: 'Essa pessoa já faz parte de uma família.',
   not_owner: 'Só o dono da família pode adicionar membros.',
 }

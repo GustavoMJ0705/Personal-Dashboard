@@ -1,8 +1,8 @@
 # Misumoto — organização pessoal e da família
 
 Site para organizar tarefas, horários, compromissos e lembretes, meus e da minha família.
-Cada familiar tem login próprio. Não há cadastro aberto nem convite por e-mail: eu crio as
-contas no painel do Supabase e depois adiciono a pessoa à família pelo site.
+Cada familiar tem login próprio. O cadastro é aberto pela tela `/cadastro` (nome, e-mail e senha;
+o nome vai em `user_metadata.display_name`). Depois o dono adiciona a pessoa à família pelo e-mail.
 Uso diário em desktop e celular.
 
 - Um usuário pertence a no máximo uma família. A família tem um dono (owner), que adiciona e remove membros.
@@ -59,8 +59,10 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
 - Tipos gerados pelo CLI, nunca escritos à mão: `npm run db:types`
   (`supabase gen types typescript --linked --schema public > types/database.types.ts`).
   Aliases legíveis (`Task`, `TaskPriority`...) ficam em `types/models.ts`, derivados do arquivo gerado.
-- Cadastro aberto desligado: `enable_signup = false` em `supabase/config.toml` (local) e, em produção,
-  desligar "Allow new users to sign up" no painel e criar o único usuário em Authentication → Users.
+- Cadastro aberto: `enable_signup = true` em `supabase/config.toml` (local) e "Allow new users to sign up" ligado no painel.
+  A tela funciona com ou sem "Confirm email": sem sessão no retorno do `signUp`, mostra o aviso de confirmação;
+  o link volta para `/login`, que troca o código pela sessão e segue para o início.
+  Em produção, a URL da Vercel precisa estar em Authentication → URL Configuration (Site URL e Redirect URLs).
 - Realtime em `tasks`, `events` e `family_members`: com família, outra pessoa pode mudar o que eu vejo.
   Os canais não filtram por `user_id`; o RLS já limita o que chega a cada um.
 - Testes de RLS em `supabase/tests/*.sql`: rodam numa transação com `rollback`, simulando usuários via
@@ -89,7 +91,7 @@ Migrations em `supabase/migrations/`; testes de RLS em `supabase/tests/`.
 
 ## Escopo (não construir nada fora disso sem eu pedir)
 
-1. Autenticação: login e logout, sem cadastro
+1. Autenticação: cadastro, login e logout
 2. Início: saudação, relógio, tarefas do dia (minhas, atribuídas a mim e da família toda), compromissos do dia e situação da família
 3. Tarefas: criar, concluir, editar, excluir, adiar, com "Para quem"
 4. Agenda horizontal: faixa de dias rolável + linha do tempo do dia (horas da esquerda para a direita), filtro por familiar

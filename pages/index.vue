@@ -6,7 +6,7 @@ import { groupOpenTasks } from '~/utils/tasks'
 
 useHead({ title: 'Início' })
 
-const { userId } = useAuth()
+const { user, userId } = useAuth()
 const { tasks, status: tasksStatus, ensureLoaded: ensureTasks, subscribe } = useTasks()
 const { events, status: eventsStatus, ensureLoaded: ensureEvents, refreshOnVisible } = useDayEvents()
 const { me, ensureLoaded: ensureFamily } = useFamily()
@@ -28,7 +28,9 @@ const upcoming = computed(() => myEvents.value.filter((event) => Date.parse(even
 
 const greeting = computed(() => {
   const salutation = greetingFor(now.value)
-  return me.value ? `${salutation}, ${me.value.display_name}.` : `${salutation}.`
+  const metadataName = (user.value?.user_metadata as { display_name?: unknown } | undefined)?.display_name
+  const name = me.value?.display_name ?? (typeof metadataName === 'string' ? metadataName.trim() : '')
+  return name ? `${salutation}, ${name}.` : `${salutation}.`
 })
 
 const summary = computed(() => {

@@ -26,7 +26,7 @@ async function submit() {
 <template>
   <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
     <p class="text-[15px] leading-relaxed text-ink-muted">
-      A pessoa precisa ter uma conta. Crie no painel do Supabase, em Authentication, Users, e use o mesmo e-mail aqui.
+      A pessoa precisa ter uma conta. Se ainda não tiver, peça para ela criar em Criar conta, na tela de login, e use o mesmo e-mail aqui.
     </p>
     <div class="grid gap-4 sm:grid-cols-2">
       <UiTextField

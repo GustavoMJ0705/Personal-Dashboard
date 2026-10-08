@@ -17,6 +17,22 @@ export function useAuth() {
     await navigateTo(useSupabaseCookieRedirect().pluck() ?? '/', { replace: true })
   }
 
+  /** Cria a conta. Se o Supabase exigir confirmação por e-mail, não há sessão ainda. */
+  async function signUp(name: string, email: string, password: string): Promise<{ needsConfirmation: boolean }> {
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+        emailRedirectTo: import.meta.client ? `${window.location.origin}/login` : undefined,
+      },
+    })
+    if (error) throw error
+    if (!data.session) return { needsConfirmation: true }
+    await navigateTo('/', { replace: true })
+    return { needsConfirmation: false }
+  }
+
   async function signOut() {
     const { error } = await client.auth.signOut()
     if (error) {
@@ -28,5 +44,5 @@ export function useAuth() {
     await navigateTo('/login', { replace: true })
   }
 
-  return { user, userId, signIn, signOut }
+  return { user, userId, signIn, signUp, signOut }
 }

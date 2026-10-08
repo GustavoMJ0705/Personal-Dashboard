@@ -4,7 +4,9 @@ import { CircleAlert } from 'lucide-vue-next'
 const { createFamily } = useFamily()
 
 const name = ref('')
-const displayName = ref('')
+const { user } = useAuth()
+const metadataName = (user.value?.user_metadata as { display_name?: unknown } | undefined)?.display_name
+const displayName = ref(typeof metadataName === 'string' ? metadataName : '')
 const pending = ref(false)
 const error = ref<string | null>(null)
 

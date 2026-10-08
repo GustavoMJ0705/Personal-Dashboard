@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/login',
-      exclude: [],
+      exclude: ['/cadastro'],
       saveRedirectToCookie: true,
     },
   },
