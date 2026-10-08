@@ -51,6 +51,16 @@ begin
     values ('jantar em família', now(), now() + interval '1 hour', fid);
   insert into public.events (title, starts_at, ends_at)
     values ('consulta pessoal', now(), now() + interval '1 hour');
+  insert into public.events (title, starts_at, ends_at, family_id, assignee_ids)
+    values ('reunião da escola', now(), now() + interval '1 hour', fid,
+            array['00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-00000000000b']::uuid[]);
+
+  begin
+    insert into public.events (title, starts_at, ends_at, family_id, assignee_ids)
+      values ('com estranho', now(), now() + interval '1 hour', fid, array['00000000-0000-4000-8000-00000000000c']::uuid[]);
+    raise exception 'FALHOU: atribuiu compromisso a quem não é da família';
+  exception when insufficient_privilege then null;
+  end;
 
   begin
     insert into public.tasks (title, family_id, assignee_ids)
@@ -86,8 +96,8 @@ begin
   if exists (select 1 from public.tasks where title = 'pessoal do dono') then
     raise exception 'FALHOU: tarefa pessoal do dono vazou para o membro';
   end if;
-  if (select count(*) from public.events) <> 1 then
-    raise exception 'FALHOU: membro deveria ver só o compromisso da família';
+  if (select count(*) from public.events) <> 2 then
+    raise exception 'FALHOU: membro deveria ver só os 2 compromissos da família';
   end if;
   if (select count(*) from public.family_members) <> 2 or (select count(*) from public.families) <> 1 then
     raise exception 'FALHOU: membro deveria ver a família e os 2 membros';
@@ -196,6 +206,10 @@ begin
 
   if exists (select 1 from public.tasks where '00000000-0000-4000-8000-00000000000b' = any (assignee_ids)) then
     raise exception 'FALHOU: tarefas continuaram atribuídas a quem saiu';
+  end if;
+
+  if (select assignee_ids from public.events where title = 'reunião da escola') <> array['00000000-0000-4000-8000-00000000000a']::uuid[] then
+    raise exception 'FALHOU: compromisso continuou com quem saiu da família';
   end if;
 
   if (select assignee_ids from public.tasks where title = 'para dono e membro') <> array['00000000-0000-4000-8000-00000000000a']::uuid[] then

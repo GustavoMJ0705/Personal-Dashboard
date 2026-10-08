@@ -16,6 +16,19 @@ const props = withDefaults(
 
 const model = defineModel<string>({ default: '' })
 const slots = useSlots()
+
+const PICKER_TYPES = new Set(['date', 'time', 'datetime-local'])
+
+/** No celular, abre o seletor nativo de data/hora ao tocar no campo. */
+function openPicker(event: MouseEvent) {
+  const field = event.currentTarget as HTMLInputElement
+  if (!PICKER_TYPES.has(props.type) || field.disabled) return
+  try {
+    field.showPicker()
+  } catch {
+    // Sem showPicker ou já aberto: segue o comportamento padrão do navegador.
+  }
+}
 </script>
 
 <template>
@@ -32,6 +45,7 @@ const slots = useSlots()
         :disabled="props.disabled"
         :aria-invalid="props.invalid || undefined"
         :aria-describedby="props.describedby"
+        @click="openPicker"
         class="h-11 w-full min-w-0 rounded border bg-canvas px-3.5 text-base text-ink transition-colors placeholder:text-ink-subtle hover:border-ink-subtle focus:border-accent disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-60"
         :class="[props.invalid ? 'border-danger' : 'border-line-strong', slots.trailing && 'pr-12']"
       >

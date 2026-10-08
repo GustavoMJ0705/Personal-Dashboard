@@ -72,9 +72,9 @@ const emptyText = computed(() => {
   return 'Nenhum compromisso dessa pessoa neste dia.'
 })
 const defaultAudience = computed<Audience>(() => {
-  if (filter.value === 'family') return 'family'
-  if (filter.value.startsWith('member:')) return filter.value as Audience
-  return 'me'
+  if (filter.value === 'family') return { kind: 'family' }
+  if (filter.value.startsWith('member:')) return { kind: 'people', ids: [filter.value.slice('member:'.length)] }
+  return { kind: 'me' }
 })
 
 function go(next: { date?: string, filter?: AgendaFilter }) {

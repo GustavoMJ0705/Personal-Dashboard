@@ -20,7 +20,8 @@ const forWhom = computed(() => {
   if (!family.value) return null
   return audienceLabel(props.event, members.value, userId.value) ?? 'Só você'
 })
-const ownerName = computed(() => members.value.find((m) => m.user_id === (props.event.assignee_id ?? props.event.user_id))?.display_name ?? '')
+const owner = useEventOwner()
+const eventOwner = computed(() => owner(props.event))
 
 watch(() => props.event.id, () => {
   editing.value = false
@@ -64,7 +65,7 @@ function confirmDelete() {
           <span class="break-words">{{ event.location }}</span>
         </li>
         <li v-if="forWhom" class="flex items-center gap-2.5">
-          <UiAvatar :name="ownerName" :family="!!event.family_id && !event.assignee_id" size="sm" />
+          <UiAvatar :name="eventOwner?.name ?? ''" :family="eventOwner?.family ?? false" size="sm" />
           <span>{{ forWhom }}</span>
         </li>
       </ul>

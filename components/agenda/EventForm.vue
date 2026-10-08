@@ -15,7 +15,7 @@ const emit = defineEmits<{ close: [], created: [day: string] }>()
 const { create, update, remove } = useAgenda()
 const { userId } = useAuth()
 const { family } = useFamily()
-const audience = ref<Audience>(props.event ? audienceOf(props.event) : props.defaultAudience ?? 'me')
+const audience = ref<Audience>(props.event ? audienceOf(props.event) : props.defaultAudience ?? { kind: 'me' })
 const isCreator = computed(() => !props.event || props.event.user_id === userId.value)
 
 function addHour(time: string) {
@@ -141,7 +141,7 @@ function confirmDelete() {
 
     <UiTextField :id="fieldId('local')" v-model="form.location" label="Local" autocomplete="off" />
 
-    <FamilyAudienceSelect v-if="family" :id="fieldId('para-quem')" v-model="audience" :can-make-personal="isCreator" />
+    <FamilyPeoplePicker v-if="family" :id="fieldId('para-quem')" v-model="audience" :can-make-personal="isCreator" />
 
     <div v-if="confirmingDelete" role="group" aria-label="Confirmar exclusão" class="flex flex-wrap items-center gap-3 rounded bg-danger-soft px-3.5 py-3">
       <p class="mr-auto text-[15px] text-danger">Excluir este compromisso? Não dá para desfazer.</p>

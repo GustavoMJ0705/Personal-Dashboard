@@ -7,7 +7,7 @@ Uso diário em desktop e celular.
 
 - Um usuário pertence a no máximo uma família. A família tem um dono (owner), que adiciona e remove membros.
 - Tarefas e compromissos podem ser **pessoais** (só quem criou vê), **atribuídos** ou **da família toda**.
-  Tarefa pode ter várias pessoas (inclusive eu junto com outros); compromisso tem uma.
+  Tarefas e compromissos podem ter várias pessoas (inclusive eu junto com outros).
 - Itens compartilhados: qualquer membro edita e conclui; só quem criou exclui ou deixa de compartilhar.
 - Lembretes continuam pessoais.
 - Cada membro tem um status manual (em casa, trabalhando, estudando, viajando, fora) com nota opcional.
@@ -91,16 +91,16 @@ Todas as tabelas: `id uuid default gen_random_uuid()`, `user_id`, `created_at`, 
   que não existe sem data), `priority public.task_priority`
   (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`,
   `family_id`, `assignee_ids uuid[]` (default `{}`)
-- `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_id`
+- `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_ids uuid[]` (default `{}`)
 - `reminders`: `title`, `remind_at`, `channel text`, `sent_at`; índice parcial em `remind_at where sent_at is null` para o pg_cron. Sempre pessoal.
 - `families`: `user_id` (dono), `name`
 - `family_members`: `family_id`, `user_id` (unique: uma família por usuário), `display_name`, `role` (`owner | member`),
   `status` (`at_home | working | studying | traveling | out`), `status_note`, `status_updated_at` (trigger)
 
 Em `tasks` e `events`: `family_id` nulo = pessoal. `family_id` preenchido e sem responsável = família toda.
-Com responsável (`tasks.assignee_ids` não vazio / `events.assignee_id`) = atribuído a essas pessoas,
-todas membros da mesma família (`private.are_members_of_family` / `private.is_member_of_family`).
-"Para quem" nas tarefas: chips Eu, Família toda e "+ Adicionar membro" (`FamilyPeoplePicker`); nos compromissos, um select.
+Com `assignee_ids` não vazio = atribuído a essas pessoas, todas membros da mesma família (`private.are_members_of_family`).
+"Para quem" em tarefas e compromissos: chips Eu, Família toda e "+ Adicionar membro" (`FamilyPeoplePicker`, tipo `Audience`).
+Campos de data/hora abrem o seletor nativo com `showPicker()` ao tocar (no celular, só focar não abre).
 
 RPCs: `create_family(family_name, member_display_name)`, `add_family_member(member_email, member_display_name)` (só o dono).
 

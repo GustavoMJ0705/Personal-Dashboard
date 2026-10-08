@@ -20,49 +20,25 @@ export function initials(name: string): string {
   return (first + last).toUpperCase()
 }
 
-/** Compromissos: pessoal ("me"), família toda ou um membro. */
-export type Audience = 'me' | 'family' | `member:${string}`
+/** Para quem é um item: pessoal, família toda ou pessoas específicas (uma ou mais). */
+export type Audience = { kind: 'me' } | { kind: 'family' } | { kind: 'people', ids: string[] }
 
-/** Tarefas: pessoal, família toda ou pessoas específicas (uma ou mais). */
-export type TaskAudience = { kind: 'me' } | { kind: 'family' } | { kind: 'people', ids: string[] }
-
-interface SharedWithOne {
-  family_id: string | null
-  assignee_id: string | null
-}
-
-interface SharedWithMany {
+interface Shareable {
   family_id: string | null
   assignee_ids: string[]
 }
 
-type Shareable = SharedWithOne | SharedWithMany
-
-/** Responsáveis de um item compartilhado, seja compromisso (um) ou tarefa (vários). */
 export function assigneesOf(item: Shareable): string[] {
-  if ('assignee_ids' in item) return item.assignee_ids
-  return item.assignee_id ? [item.assignee_id] : []
+  return item.assignee_ids
 }
 
-export function audienceOf(item: SharedWithOne): Audience {
-  if (!item.family_id) return 'me'
-  if (!item.assignee_id) return 'family'
-  return `member:${item.assignee_id}`
-}
-
-export function audienceColumns(audience: Audience, familyId: string | null): SharedWithOne {
-  if (audience === 'me' || !familyId) return { family_id: null, assignee_id: null }
-  if (audience === 'family') return { family_id: familyId, assignee_id: null }
-  return { family_id: familyId, assignee_id: audience.slice('member:'.length) }
-}
-
-export function taskAudienceOf(item: SharedWithMany): TaskAudience {
+export function audienceOf(item: Shareable): Audience {
   if (!item.family_id) return { kind: 'me' }
   if (item.assignee_ids.length === 0) return { kind: 'family' }
   return { kind: 'people', ids: [...item.assignee_ids] }
 }
 
-export function taskAudienceColumns(audience: TaskAudience, familyId: string | null): SharedWithMany {
+export function audienceColumns(audience: Audience, familyId: string | null): Shareable {
   if (audience.kind === 'me' || !familyId) return { family_id: null, assignee_ids: [] }
   if (audience.kind === 'family' || audience.ids.length === 0) return { family_id: familyId, assignee_ids: [] }
   return { family_id: familyId, assignee_ids: [...new Set(audience.ids)] }

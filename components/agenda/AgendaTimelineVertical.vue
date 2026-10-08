@@ -114,6 +114,12 @@ watch(() => props.day, () => nextTick(scrollToFocus))
               size="sm"
               :class="selectedId === block.event.id && 'bg-panel'"
             />
+            <span
+              v-if="owner(block.event)?.more"
+              class="-ml-1 shrink-0 text-xs font-semibold tabular-nums"
+              :class="selectedId === block.event.id ? 'text-action-contrast' : 'text-accent'"
+              aria-hidden="true"
+            >+{{ owner(block.event)!.more }}</span>
             <span class="min-w-0 flex-1 leading-tight">
               <span
                 class="truncate text-[13px] tabular-nums"

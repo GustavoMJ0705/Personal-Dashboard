@@ -4,7 +4,7 @@ import { type EventsChange, onEventsChange } from './useEventsRealtime'
 export type AgendaStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type EventDraft = Pick<
   AgendaEvent,
-  'title' | 'starts_at' | 'ends_at' | 'location' | 'all_day' | 'family_id' | 'assignee_id'
+  'title' | 'starts_at' | 'ends_at' | 'location' | 'all_day' | 'family_id' | 'assignee_ids'
 >
 
 interface AgendaRange {

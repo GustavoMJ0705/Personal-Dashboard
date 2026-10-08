@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Trash2 } from 'lucide-vue-next'
 import type { Task, TaskPriority } from '~/types/models'
-import { taskAudienceColumns, taskAudienceOf } from '~/utils/family'
+import { audienceColumns, audienceOf } from '~/utils/family'
 import { PRIORITY_LABEL, dueAtFor, taskTime } from '~/utils/tasks'
 
 const props = defineProps<{ task: Task }>()
@@ -17,7 +17,7 @@ const form = reactive({
   due_date: props.task.due_date ?? '',
   due_time: taskTime(props.task) ?? '',
   priority: props.task.priority,
-  audience: taskAudienceOf(props.task),
+  audience: audienceOf(props.task),
 })
 const isCreator = computed(() => props.task.user_id === userId.value)
 const titleError = ref<string | null>(null)
@@ -44,7 +44,7 @@ function save() {
     due_date: form.due_date || null,
     due_at: dueAtFor(form.due_date || null, form.due_time || null),
     priority: form.priority,
-    ...taskAudienceColumns(form.audience, family.value?.id ?? props.task.family_id),
+    ...audienceColumns(form.audience, family.value?.id ?? props.task.family_id),
   })
 }
 

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Plus, X } from 'lucide-vue-next'
-import type { TaskAudience } from '~/utils/family'
+import type { Audience } from '~/utils/family'
 
 const props = withDefaults(defineProps<{ id: string, canMakePersonal?: boolean, compact?: boolean }>(), {
   canMakePersonal: true,
   compact: false,
 })
-const model = defineModel<TaskAudience>({ required: true })
+const model = defineModel<Audience>({ required: true })
 
 const { members } = useFamily()
 const { userId } = useAuth()

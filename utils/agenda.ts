@@ -65,9 +65,9 @@ export type AgendaFilter = 'all' | 'me' | 'family' | `member:${string}`
 
 export function matchesFilter(event: AgendaEvent, filter: AgendaFilter, myId: string | null): boolean {
   if (filter === 'all') return true
-  if (filter === 'family') return !!event.family_id && !event.assignee_id
-  if (filter === 'me') return !event.family_id || event.assignee_id === myId
-  return !!event.family_id && event.assignee_id === filter.slice('member:'.length)
+  if (filter === 'family') return !!event.family_id && event.assignee_ids.length === 0
+  if (filter === 'me') return !event.family_id || (!!myId && event.assignee_ids.includes(myId))
+  return !!event.family_id && event.assignee_ids.includes(filter.slice('member:'.length))
 }
 
 const MINUTES_PER_DAY = 24 * 60

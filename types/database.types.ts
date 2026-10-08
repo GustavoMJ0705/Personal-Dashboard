@@ -6,7 +6,7 @@ export type Database = {
       events: {
         Row: {
           all_day: boolean;
-          assignee_id: string | null;
+          assignee_ids: string[];
           created_at: string;
           ends_at: string;
           family_id: string | null;
@@ -20,7 +20,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           all_day?: boolean;
-          assignee_id?: string | null;
+          assignee_ids?: string[];
           created_at?: string;
           ends_at: string;
           family_id?: string | null;
@@ -33,7 +33,7 @@ export type Database = {
         };
         Update: {
           all_day?: boolean;
-          assignee_id?: string | null;
+          assignee_ids?: string[];
           created_at?: string;
           ends_at?: string;
           family_id?: string | null;
