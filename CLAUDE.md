@@ -161,7 +161,8 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 ### Layout
 
 - Mobile: barra de abas fixa embaixo (respeitar `env(safe-area-inset-bottom)`). Desktop (md+): trilho lateral fixo à esquerda com wordmark, navegação e "Sair".
-- Conteúdo em coluna única, `max-w` ~44rem, alinhado à esquerda.
+- Conteúdo em coluna única, `max-w` ~44rem. No celular, alinhado à esquerda; no desktop (md+), a coluna fica centralizada
+  na área ao lado do trilho, com o topo de cada página (título, saudação, relógio) centralizado e os painéis empilhados no mesmo eixo.
 - Só mostrar na navegação as telas que já existem.
 - Navegação: Início, Agenda, Tarefas, Família.
 - **Início (a peça marcante, o resto fica quieto):** saudação pelo horário com o meu nome ("Boa tarde, Gustavo"),

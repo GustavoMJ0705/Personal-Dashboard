@@ -109,7 +109,7 @@ function retry() {
 
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-4 md:flex-col md:justify-center">
       <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Agenda</h1>
       <UiButton v-if="!creating" size="sm" @click="startCreating">
         <Plus class="size-5" aria-hidden="true" />
@@ -139,7 +139,7 @@ function retry() {
       @reach-end="extend('end')"
     />
 
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 md:justify-center">
       <p aria-live="polite" class="flex items-center gap-2 text-lg font-medium text-ink">
         <span class="first-letter:uppercase">{{ dayLabel }}</span>
         <span v-if="date === today" class="rounded-sm bg-accent-soft px-1.5 text-[13px] font-medium text-accent">Hoje</span>
@@ -193,7 +193,7 @@ function retry() {
           :day-label="dayLabel"
           @select="select"
         />
-        <p v-if="!selected" class="text-sm text-ink-muted">Toque num compromisso para ver os detalhes.</p>
+        <p v-if="!selected" class="text-sm text-ink-muted md:text-center">Toque num compromisso para ver os detalhes.</p>
       </div>
 
       <AgendaEventDetails v-if="selected" :key="selected.id" :event="selected" :day="date" class="mt-4" @close="selectedId = null" />

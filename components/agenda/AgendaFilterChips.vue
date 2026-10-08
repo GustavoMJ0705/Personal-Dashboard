@@ -16,7 +16,7 @@ const options = computed<Array<{ value: AgendaFilter, label: string }>>(() => [
 
 <template>
   <div class="-mx-5 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-    <div role="group" aria-label="Mostrar compromissos de" class="flex w-max gap-1.5">
+    <div role="group" aria-label="Mostrar compromissos de" class="flex w-max gap-1.5 md:mx-auto">
       <button
         v-for="option in options"
         :key="option.value"

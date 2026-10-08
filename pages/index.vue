@@ -43,13 +43,15 @@ const summary = computed(() => {
 
 <template>
   <div>
-    <h1 class="font-display text-2xl font-semibold tracking-[-0.02em] text-ink md:text-3xl">{{ greeting }}</h1>
+    <header class="md:flex md:flex-col md:items-center md:text-center">
+      <h1 class="font-display text-2xl font-semibold tracking-[-0.02em] text-ink md:text-3xl">{{ greeting }}</h1>
 
-    <DashboardClock class="mt-5" :now="now" />
+      <DashboardClock class="mt-5" :now="now" />
 
-    <DashboardDayRuler class="mt-6" :now="now" :today="today" :events="myTodayEvents" />
+      <DashboardDayRuler class="mt-6 w-full md:mx-auto" :now="now" :today="today" :events="myTodayEvents" />
 
-    <p v-if="summary" class="mt-6 max-w-[34rem] text-xl font-medium leading-snug text-ink md:text-2xl">{{ summary }}</p>
+      <p v-if="summary" class="mt-6 max-w-[34rem] text-xl font-medium leading-snug text-ink md:text-2xl">{{ summary }}</p>
+    </header>
 
     <div class="mt-10 flex flex-col gap-5 md:mt-12 md:gap-6">
       <DashboardTasks :today="today" :overdue="grouped.overdue" :due-today="grouped.today" />

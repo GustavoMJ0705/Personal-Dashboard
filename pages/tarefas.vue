@@ -48,7 +48,7 @@ function onTabKeydown(event: KeyboardEvent) {
 
 <template>
   <div>
-    <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Tarefas</h1>
+    <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-center md:text-4xl">Tarefas</h1>
 
     <div class="panel mt-6">
       <div role="tablist" aria-label="Filtrar tarefas" class="-mt-1 flex gap-1 border-b">

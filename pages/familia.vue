@@ -26,8 +26,8 @@ function nextEventFor(memberId: string) {
 
 <template>
   <div>
-    <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Família</h1>
-    <p v-if="family" class="mt-1 text-lg text-ink-muted">{{ family.name }}</p>
+    <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-center md:text-4xl">Família</h1>
+    <p v-if="family" class="mt-1 text-lg text-ink-muted md:text-center">{{ family.name }}</p>
 
     <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando família" class="mt-8 flex flex-col gap-4">
       <div class="h-40 animate-pulse rounded-lg bg-surface" />
