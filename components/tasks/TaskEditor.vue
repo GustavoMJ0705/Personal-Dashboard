@@ -37,6 +37,8 @@ function save() {
     description: form.description.trim() || null,
     due_date: form.due_date || null,
     priority: form.priority,
+    family_id: props.task.family_id,
+    assignee_id: props.task.assignee_id,
   })
 }
 

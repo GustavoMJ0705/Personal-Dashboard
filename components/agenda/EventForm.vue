@@ -73,6 +73,8 @@ function toDraft(): EventDraft | null {
     starts_at: startsAt.toISOString(),
     ends_at: endsAt.toISOString(),
     location: form.location.trim() || null,
+    family_id: props.event?.family_id ?? null,
+    assignee_id: props.event?.assignee_id ?? null,
   }
 }
 

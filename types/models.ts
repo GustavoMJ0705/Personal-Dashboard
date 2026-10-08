@@ -18,3 +18,8 @@ export type AgendaEventUpdate = Update<'events'>
 export type Reminder = Row<'reminders'>
 export type ReminderInsert = Insert<'reminders'>
 export type ReminderUpdate = Update<'reminders'>
+
+export type Family = Row<'families'>
+export type FamilyMember = Row<'family_members'>
+export type FamilyRole = PublicSchema['Enums']['family_role']
+export type MemberStatus = PublicSchema['Enums']['member_status']

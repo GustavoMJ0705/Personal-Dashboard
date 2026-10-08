@@ -1,7 +1,10 @@
 import type { AgendaEvent } from '~/types/models'
 
 export type AgendaStatus = 'idle' | 'loading' | 'ready' | 'error'
-export type EventDraft = Pick<AgendaEvent, 'title' | 'starts_at' | 'ends_at' | 'location' | 'all_day'>
+export type EventDraft = Pick<
+  AgendaEvent,
+  'title' | 'starts_at' | 'ends_at' | 'location' | 'all_day' | 'family_id' | 'assignee_id'
+>
 
 interface AgendaRange {
   start: string
