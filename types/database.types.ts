@@ -163,7 +163,7 @@ export type Database = {
       };
       tasks: {
         Row: {
-          assignee_id: string | null;
+          assignee_ids: string[];
           completed_at: string | null;
           created_at: string;
           description: string | null;
@@ -177,7 +177,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
-          assignee_id?: string | null;
+          assignee_ids?: string[];
           completed_at?: string | null;
           created_at?: string;
           description?: string | null;
@@ -190,7 +190,7 @@ export type Database = {
           user_id?: string;
         };
         Update: {
-          assignee_id?: string | null;
+          assignee_ids?: string[];
           completed_at?: string | null;
           created_at?: string;
           description?: string | null;
@@ -225,6 +225,10 @@ export type Database = {
         Args: { family_name: string; member_display_name: string };
         Returns: string;
       };
+      dearmor: { Args: { "": string }; Returns: string };
+      gen_random_uuid: { Args: Record<PropertyKey, never>; Returns: string };
+      gen_salt: { Args: { "": string }; Returns: string };
+      pgp_armor_headers: { Args: { "": string }; Returns: Record<string, unknown>[] };
     };
     Enums: {
       family_role: "owner" | "member";

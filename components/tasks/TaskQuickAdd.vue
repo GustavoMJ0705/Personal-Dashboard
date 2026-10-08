@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
 import { addDaysToCivilDate } from '~/utils/datetime'
-import { type Audience, audienceColumns } from '~/utils/family'
+import { type TaskAudience, taskAudienceColumns } from '~/utils/family'
 
 const props = withDefaults(defineProps<{ today: string, withDueDate?: boolean }>(), { withDueDate: true })
 
 const { create } = useTasks()
 const { family } = useFamily()
-const audience = ref<Audience>('me')
+const audience = ref<TaskAudience>({ kind: 'me' })
 
 const title = ref('')
 const due = ref(props.today)
@@ -35,7 +35,7 @@ async function submit() {
   const ok = await create({
     title: value,
     due_date: props.withDueDate ? due.value || null : props.today,
-    ...audienceColumns(audience.value, family.value?.id ?? null),
+    ...taskAudienceColumns(audience.value, family.value?.id ?? null),
   })
   if (!ok && !title.value) title.value = value
 }
@@ -81,7 +81,10 @@ async function submit() {
         class="h-8 rounded-sm bg-transparent px-2 text-base text-ink-muted transition-colors hover:bg-surface"
         :class="due && due !== today && due !== tomorrow && 'bg-accent-soft text-accent'"
       >
-      <FamilyAudienceSelect v-if="family" id="nova-tarefa-para-quem" v-model="audience" compact class="ml-auto" />
     </fieldset>
+
+    <div v-if="withDueDate && family" class="border-t px-2.5 py-2">
+      <FamilyPeoplePicker id="nova-tarefa-para-quem" v-model="audience" compact />
+    </div>
   </form>
 </template>

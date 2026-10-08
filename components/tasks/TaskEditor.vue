@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Trash2 } from 'lucide-vue-next'
 import type { Task, TaskPriority } from '~/types/models'
-import { audienceColumns, audienceOf } from '~/utils/family'
+import { taskAudienceColumns, taskAudienceOf } from '~/utils/family'
 import { PRIORITY_LABEL } from '~/utils/tasks'
 
 const props = defineProps<{ task: Task }>()
@@ -16,7 +16,7 @@ const form = reactive({
   description: props.task.description ?? '',
   due_date: props.task.due_date ?? '',
   priority: props.task.priority,
-  audience: audienceOf(props.task),
+  audience: taskAudienceOf(props.task),
 })
 const isCreator = computed(() => props.task.user_id === userId.value)
 const titleError = ref<string | null>(null)
@@ -42,7 +42,7 @@ function save() {
     description: form.description.trim() || null,
     due_date: form.due_date || null,
     priority: form.priority,
-    ...audienceColumns(form.audience, family.value?.id ?? props.task.family_id),
+    ...taskAudienceColumns(form.audience, family.value?.id ?? props.task.family_id),
   })
 }
 
@@ -102,12 +102,11 @@ function confirmDelete() {
       </fieldset>
     </div>
 
-    <FamilyAudienceSelect
+    <FamilyPeoplePicker
       v-if="family"
       :id="fieldId('para-quem')"
       v-model="form.audience"
       :can-make-personal="isCreator"
-      class="sm:w-64"
     />
 
     <div v-if="confirmingDelete" role="group" aria-label="Confirmar exclusão" class="flex flex-wrap items-center gap-3 rounded bg-danger-soft px-3.5 py-3">

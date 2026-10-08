@@ -20,42 +20,80 @@ export function initials(name: string): string {
   return (first + last).toUpperCase()
 }
 
-/** Para quem é um item: pessoal ("me"), família toda ou um membro. */
+/** Compromissos: pessoal ("me"), família toda ou um membro. */
 export type Audience = 'me' | 'family' | `member:${string}`
 
-interface Shareable {
+/** Tarefas: pessoal, família toda ou pessoas específicas (uma ou mais). */
+export type TaskAudience = { kind: 'me' } | { kind: 'family' } | { kind: 'people', ids: string[] }
+
+interface SharedWithOne {
   family_id: string | null
   assignee_id: string | null
 }
 
-export function audienceOf(item: Shareable): Audience {
+interface SharedWithMany {
+  family_id: string | null
+  assignee_ids: string[]
+}
+
+type Shareable = SharedWithOne | SharedWithMany
+
+/** Responsáveis de um item compartilhado, seja compromisso (um) ou tarefa (vários). */
+export function assigneesOf(item: Shareable): string[] {
+  if ('assignee_ids' in item) return item.assignee_ids
+  return item.assignee_id ? [item.assignee_id] : []
+}
+
+export function audienceOf(item: SharedWithOne): Audience {
   if (!item.family_id) return 'me'
   if (!item.assignee_id) return 'family'
   return `member:${item.assignee_id}`
 }
 
-export function audienceColumns(audience: Audience, familyId: string | null): Shareable {
+export function audienceColumns(audience: Audience, familyId: string | null): SharedWithOne {
   if (audience === 'me' || !familyId) return { family_id: null, assignee_id: null }
   if (audience === 'family') return { family_id: familyId, assignee_id: null }
   return { family_id: familyId, assignee_id: audience.slice('member:'.length) }
 }
 
+export function taskAudienceOf(item: SharedWithMany): TaskAudience {
+  if (!item.family_id) return { kind: 'me' }
+  if (item.assignee_ids.length === 0) return { kind: 'family' }
+  return { kind: 'people', ids: [...item.assignee_ids] }
+}
+
+export function taskAudienceColumns(audience: TaskAudience, familyId: string | null): SharedWithMany {
+  if (audience.kind === 'me' || !familyId) return { family_id: null, assignee_ids: [] }
+  if (audience.kind === 'family' || audience.ids.length === 0) return { family_id: familyId, assignee_ids: [] }
+  return { family_id: familyId, assignee_ids: [...new Set(audience.ids)] }
+}
+
+const listFormatter = new Intl.ListFormat('pt-BR', { style: 'long', type: 'conjunction' })
+
+/** "Ana", "Ana e Lucas", "você e Ana": ordem dos membros, com "você" por último. */
+export function formatPeople(ids: readonly string[], members: readonly FamilyMember[], myId: string | null): string {
+  const names = members.filter((m) => ids.includes(m.user_id) && m.user_id !== myId).map((m) => m.display_name)
+  if (myId && ids.includes(myId)) names.push('você')
+  return listFormatter.format(names)
+}
+
 /** Rótulo para itens compartilhados; null para pessoais. */
 export function audienceLabel(item: Shareable, members: readonly FamilyMember[], myId: string | null): string | null {
   if (!item.family_id) return null
-  if (!item.assignee_id) return 'Família'
-  if (item.assignee_id === myId) return 'Para você'
-  const member = members.find((m) => m.user_id === item.assignee_id)
-  return member ? `Para ${member.display_name}` : 'Família'
+  const ids = assigneesOf(item).filter((id) => members.some((m) => m.user_id === id))
+  if (ids.length === 0) return 'Família'
+  return `Para ${formatPeople(ids, members, myId)}`
 }
 
-/** Itens do meu dia: pessoais, atribuídos a mim ou da família toda. */
+/** Itens do meu dia: pessoais, da família toda ou em que sou responsável. */
 export function isMine(item: Shareable, myId: string | null): boolean {
-  return !item.family_id || !item.assignee_id || item.assignee_id === myId
+  if (!item.family_id) return true
+  const ids = assigneesOf(item)
+  return ids.length === 0 || (!!myId && ids.includes(myId))
 }
 
-/** Itens de um membro: atribuídos a ele (e, para mim, também os pessoais). */
+/** Itens de um membro: em que é responsável (e, para mim, também os pessoais). */
 export function belongsTo(item: Shareable, memberId: string, myId: string | null): boolean {
   if (!item.family_id) return memberId === myId
-  return item.assignee_id === memberId
+  return assigneesOf(item).includes(memberId)
 }

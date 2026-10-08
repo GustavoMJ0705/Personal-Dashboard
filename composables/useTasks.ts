@@ -11,10 +11,10 @@ export interface TaskDraft {
   description?: string | null
   priority?: TaskPriority
   family_id?: string | null
-  assignee_id?: string | null
+  assignee_ids?: string[]
 }
 
-export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'priority' | 'family_id' | 'assignee_id'>
+export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'priority' | 'family_id' | 'assignee_ids'>
 type TaskPatch = Partial<TaskEdit & Pick<Task, 'completed_at'>>
 
 const TEMP_PREFIX = 'temp-'
@@ -167,7 +167,7 @@ export function useTasks() {
       due_date: draft.due_date,
       priority: draft.priority ?? 'normal',
       family_id: draft.family_id ?? null,
-      assignee_id: draft.assignee_id ?? null,
+      assignee_ids: draft.assignee_ids ?? [],
       completed_at: null,
       created_at: now,
       updated_at: now,
@@ -182,7 +182,7 @@ export function useTasks() {
         due_date: temp.due_date,
         priority: temp.priority,
         family_id: temp.family_id,
-        assignee_id: temp.assignee_id,
+        assignee_ids: temp.assignee_ids,
       })
       .select()
       .single()

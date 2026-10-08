@@ -43,22 +43,24 @@ begin
 
   insert into public.tasks (title) values ('pessoal do dono');
   insert into public.tasks (title, family_id) values ('da família toda', fid);
-  insert into public.tasks (title, family_id, assignee_id)
-    values ('para o membro', fid, '00000000-0000-4000-8000-00000000000b');
+  insert into public.tasks (title, family_id, assignee_ids)
+    values ('para o membro', fid, array['00000000-0000-4000-8000-00000000000b']::uuid[]);
+  insert into public.tasks (title, family_id, assignee_ids)
+    values ('para dono e membro', fid, array['00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-00000000000b']::uuid[]);
   insert into public.events (title, starts_at, ends_at, family_id)
     values ('jantar em família', now(), now() + interval '1 hour', fid);
   insert into public.events (title, starts_at, ends_at)
     values ('consulta pessoal', now(), now() + interval '1 hour');
 
   begin
-    insert into public.tasks (title, family_id, assignee_id)
-      values ('para estranho', fid, '00000000-0000-4000-8000-00000000000c');
+    insert into public.tasks (title, family_id, assignee_ids)
+      values ('para membro e estranho', fid, array['00000000-0000-4000-8000-00000000000b', '00000000-0000-4000-8000-00000000000c']::uuid[]);
     raise exception 'FALHOU: atribuiu tarefa a quem não é da família';
   exception when insufficient_privilege then null;
   end;
 
   begin
-    insert into public.tasks (title, assignee_id) values ('atribuída sem família', '00000000-0000-4000-8000-00000000000b');
+    insert into public.tasks (title, assignee_ids) values ('atribuída sem família', array['00000000-0000-4000-8000-00000000000b']::uuid[]);
     raise exception 'FALHOU: atribuiu tarefa sem family_id';
   exception when insufficient_privilege then null;
   end;
@@ -78,8 +80,8 @@ declare
   fid uuid := (select value from ctx where key = 'family');
   family_task uuid := (select id from public.tasks where title = 'da família toda');
 begin
-  if (select count(*) from public.tasks) <> 2 then
-    raise exception 'FALHOU: membro deveria ver 2 tarefas da família, viu %', (select count(*) from public.tasks);
+  if (select count(*) from public.tasks) <> 3 then
+    raise exception 'FALHOU: membro deveria ver 3 tarefas da família, viu %', (select count(*) from public.tasks);
   end if;
   if exists (select 1 from public.tasks where title = 'pessoal do dono') then
     raise exception 'FALHOU: tarefa pessoal do dono vazou para o membro';
@@ -192,8 +194,12 @@ begin
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FALHOU: dono não conseguiu remover o membro'; end if;
 
-  if exists (select 1 from public.tasks where assignee_id = '00000000-0000-4000-8000-00000000000b') then
+  if exists (select 1 from public.tasks where '00000000-0000-4000-8000-00000000000b' = any (assignee_ids)) then
     raise exception 'FALHOU: tarefas continuaram atribuídas a quem saiu';
+  end if;
+
+  if (select assignee_ids from public.tasks where title = 'para dono e membro') <> array['00000000-0000-4000-8000-00000000000a']::uuid[] then
+    raise exception 'FALHOU: ao remover o membro, o dono deveria continuar responsável';
   end if;
 
   raise notice 'ok: dono remove membro e as atribuições são limpas';
