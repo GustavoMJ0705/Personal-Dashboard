@@ -1,21 +1,35 @@
 <script setup lang="ts">
+import { eventsOnDay } from '~/utils/agenda'
 import { describeNextEvent, describeTasks, pickNextEvent } from '~/utils/dashboard'
+import { isMine } from '~/utils/family'
 import { groupOpenTasks } from '~/utils/tasks'
 
-useHead({ title: 'Hoje' })
+useHead({ title: 'Início' })
 
+const { userId } = useAuth()
 const { tasks, status: tasksStatus, ensureLoaded: ensureTasks, subscribe } = useTasks()
-const { events, status: eventsStatus, ensureLoaded: ensureEvents, refreshOnVisible } = useUpcomingEvents()
+const { events, status: eventsStatus, ensureLoaded: ensureEvents, refreshOnVisible } = useDayEvents()
+const { me, ensureLoaded: ensureFamily } = useFamily()
 
-await Promise.all([ensureTasks(), ensureEvents()])
+await Promise.all([ensureTasks(), ensureEvents(), ensureFamily()])
 onMounted(subscribe)
 refreshOnVisible()
 
 const now = useNow()
 const today = computed(() => toCivilDate(now.value))
 
-const grouped = computed(() => groupOpenTasks(tasks.value.filter((task) => task.completed_at === null), today.value))
-const upcoming = computed(() => events.value.filter((event) => Date.parse(event.ends_at) >= now.value.getTime()))
+const openTasks = computed(() => tasks.value.filter((task) => task.completed_at === null))
+const grouped = computed(() => groupOpenTasks(openTasks.value.filter((task) => isMine(task, userId.value)), today.value))
+
+const myEvents = computed(() => events.value.filter((event) => isMine(event, userId.value)))
+const todayEvents = computed(() => eventsOnDay(events.value, today.value))
+const myTodayEvents = computed(() => eventsOnDay(myEvents.value, today.value))
+const upcoming = computed(() => myEvents.value.filter((event) => Date.parse(event.ends_at) >= now.value.getTime()))
+
+const greeting = computed(() => {
+  const salutation = greetingFor(now.value)
+  return me.value ? `${salutation}, ${me.value.display_name}.` : `${salutation}.`
+})
 
 const summary = computed(() => {
   const parts: string[] = []
@@ -27,15 +41,16 @@ const summary = computed(() => {
 
 <template>
   <div>
-    <h1 class="sr-only">Hoje</h1>
+    <h1 class="font-display text-2xl font-semibold tracking-[-0.02em] text-ink md:text-3xl">{{ greeting }}</h1>
 
-    <DashboardClock :now="now" />
+    <DashboardClock class="mt-5" :now="now" />
 
     <p v-if="summary" class="mt-6 max-w-[34rem] text-xl font-medium leading-snug text-ink md:text-2xl">{{ summary }}</p>
 
     <div class="mt-12 flex flex-col gap-12 md:mt-14">
       <DashboardTasks :today="today" :overdue="grouped.overdue" :due-today="grouped.today" />
-      <DashboardEvents :events="upcoming" :now="now" :today="today" />
+      <DashboardEvents :events="myTodayEvents" :now="now" />
+      <DashboardFamily :now="now" :today="today" :today-events="todayEvents" :open-tasks="openTasks" />
     </div>
   </div>
 </template>

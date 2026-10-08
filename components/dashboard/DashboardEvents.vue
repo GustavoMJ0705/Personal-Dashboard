@@ -2,25 +2,31 @@
 import { CircleAlert, MapPin } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
 import { isEventOngoing } from '~/utils/dashboard'
-import { formatDayLabel } from '~/utils/datetime'
+import { audienceLabel } from '~/utils/family'
 
 const props = defineProps<{
   events: AgendaEvent[]
   now: Date
-  today: string
 }>()
 
-const { status, load } = useUpcomingEvents()
+const { status, load } = useDayEvents()
+const { members } = useFamily()
+const { userId } = useAuth()
+
+const nextId = computed(() => props.events.find((event) => Date.parse(event.ends_at) >= props.now.getTime())?.id ?? null)
 
 const rows = computed(() =>
   props.events.map((event) => {
-    const start = new Date(event.starts_at)
     const ongoing = !event.all_day && isEventOngoing(event, props.now)
+    const past = Date.parse(event.ends_at) < props.now.getTime()
     return {
       event,
       ongoing,
-      time: event.all_day ? 'Dia todo' : ongoing ? 'Agora' : formatTime(start),
-      day: ongoing ? `até ${formatTime(new Date(event.ends_at))}` : formatDayLabel(toCivilDate(start), props.today),
+      past,
+      next: event.id === nextId.value,
+      time: event.all_day ? 'Dia todo' : formatTime(new Date(event.starts_at)),
+      until: event.all_day ? null : `até ${formatTime(new Date(event.ends_at))}`,
+      forWhom: audienceLabel(event, members.value, userId.value),
     }
   }),
 )
@@ -29,7 +35,7 @@ const rows = computed(() =>
 <template>
   <section aria-labelledby="painel-compromissos">
     <div class="flex items-baseline justify-between gap-4">
-      <h2 id="painel-compromissos" class="text-lg font-semibold text-ink">Próximos compromissos</h2>
+      <h2 id="painel-compromissos" class="text-lg font-semibold text-ink">Compromissos de hoje</h2>
       <NuxtLink to="/agenda" class="rounded-sm text-[15px] font-medium text-accent hover:text-accent-hover">Ver agenda</NuxtLink>
     </div>
 
@@ -48,26 +54,37 @@ const rows = computed(() =>
       <UiButton variant="secondary" size="sm" @click="load()">Tentar de novo</UiButton>
     </div>
 
-    <p v-else-if="rows.length === 0" class="mt-4 text-base text-ink-muted">Nenhum compromisso pela frente.</p>
+    <p v-else-if="rows.length === 0" class="mt-4 text-base text-ink-muted">Nenhum compromisso hoje.</p>
 
-    <ul v-else class="mt-4 divide-y divide-line border-y">
-      <li v-for="row in rows" :key="row.event.id" class="flex gap-4 py-3.5">
-        <div class="w-20 shrink-0 tabular-nums">
+    <ol v-else class="mt-4 flex flex-col">
+      <li
+        v-for="row in rows"
+        :key="row.event.id"
+        class="flex gap-4 border-b border-line px-3 py-3.5 first:border-t"
+        :class="row.next && 'rounded border-transparent bg-accent-soft first:border-t-transparent'"
+      >
+        <div class="w-20 shrink-0 whitespace-nowrap tabular-nums">
           <time
             :datetime="row.event.starts_at"
             class="block text-base font-medium"
-            :class="row.ongoing ? 'text-accent' : 'text-ink'"
+            :class="row.next ? 'text-accent' : row.past ? 'text-ink-muted' : 'text-ink'"
           >{{ row.time }}</time>
-          <span class="block text-sm text-ink-muted">{{ row.day }}</span>
+          <span v-if="row.until" class="block text-sm text-ink-muted">{{ row.until }}</span>
         </div>
         <div class="min-w-0 flex-1">
-          <p class="break-words text-base leading-snug text-ink">{{ row.event.title }}</p>
-          <p v-if="row.event.location" class="mt-1 flex items-start gap-1.5 text-sm text-ink-muted">
-            <MapPin class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span class="break-words">{{ row.event.location }}</span>
+          <p class="flex flex-wrap items-baseline gap-x-2">
+            <span class="break-words text-base leading-snug" :class="row.past ? 'text-ink-muted' : 'text-ink'">{{ row.event.title }}</span>
+            <span v-if="row.next" class="text-sm font-medium text-accent">{{ row.ongoing ? 'Agora' : 'Próximo' }}</span>
+          </p>
+          <p v-if="row.event.location || row.forWhom" class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+            <span v-if="row.event.location" class="flex items-start gap-1.5">
+              <MapPin class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span class="break-words">{{ row.event.location }}</span>
+            </span>
+            <span v-if="row.forWhom">{{ row.forWhom }}</span>
           </p>
         </div>
       </li>
-    </ul>
+    </ol>
   </section>
 </template>
