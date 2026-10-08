@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { addDaysToCivilDate, civilToDate } from '~/utils/datetime'
+import { addDaysToCivilDate, civilToDate, zonedFormatter } from '~/utils/datetime'
 
 const props = defineProps<{
   days: string[]
@@ -12,12 +12,12 @@ const emit = defineEmits<{ select: [day: string], 'reach-start': [], 'reach-end'
 const scroller = ref<HTMLElement>()
 const buttons = new Map<string, HTMLButtonElement>()
 
-const weekdayFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short' })
-const monthFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', month: 'short' })
-const fullFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: 'numeric', month: 'long' })
 
-const items = computed(() =>
-  props.days.map((day) => {
+const items = computed(() => {
+  const weekdayFormatter = zonedFormatter('strip-weekday', { weekday: 'short' })
+  const monthFormatter = zonedFormatter('strip-month', { month: 'short' })
+  const fullFormatter = zonedFormatter('strip-full', { weekday: 'long', day: 'numeric', month: 'long' })
+  return props.days.map((day) => {
     const date = civilToDate(day)
     const dayOfMonth = Number(day.slice(8))
     return {
@@ -27,8 +27,8 @@ const items = computed(() =>
       month: dayOfMonth === 1 ? monthFormatter.format(date).replace('.', '') : null,
       label: fullFormatter.format(date),
     }
-  }),
-)
+  })
+})
 
 function setButton(day: string, el: unknown) {
   if (el instanceof HTMLButtonElement) buttons.set(day, el)

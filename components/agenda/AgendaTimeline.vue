@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { eventKey, isTempEvent } from '~/composables/useAgenda'
 import type { AgendaEvent } from '~/types/models'
-import { layoutTimeline } from '~/utils/agenda'
+import { eventEndMs, layoutTimeline } from '~/utils/agenda'
 
 const props = defineProps<{
   events: AgendaEvent[]
@@ -35,7 +35,7 @@ const nowLeft = computed(() => {
 const owner = useEventOwner()
 
 function isPast(event: AgendaEvent) {
-  return Date.parse(event.ends_at) < props.now.getTime()
+  return eventEndMs(event) < props.now.getTime()
 }
 
 /** Abre a linha do tempo uma hora antes de agora (hoje) ou do primeiro compromisso. */

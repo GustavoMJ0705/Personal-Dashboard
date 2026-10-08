@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { eventsOnDay } from '~/utils/agenda'
+import { eventEndMs, eventsOnDay } from '~/utils/agenda'
 import { describeNextEvent, describeTasks, pickNextEvent } from '~/utils/dashboard'
 import { isMine } from '~/utils/family'
 import { groupOpenTasks } from '~/utils/tasks'
@@ -24,7 +24,7 @@ const grouped = computed(() => groupOpenTasks(openTasks.value.filter((task) => i
 const myEvents = computed(() => events.value.filter((event) => isMine(event, userId.value)))
 const todayEvents = computed(() => eventsOnDay(events.value, today.value))
 const myTodayEvents = computed(() => eventsOnDay(myEvents.value, today.value))
-const upcoming = computed(() => myEvents.value.filter((event) => Date.parse(event.ends_at) >= now.value.getTime()))
+const upcoming = computed(() => myEvents.value.filter((event) => eventEndMs(event) >= now.value.getTime()))
 
 const greeting = computed(() => {
   const salutation = greetingFor(now.value)

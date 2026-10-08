@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CircleAlert, Smile, UserPlus, Users } from 'lucide-vue-next'
+import { eventEndMs } from '~/utils/agenda'
 import { belongsTo } from '~/utils/family'
 
 useHead({ title: 'Família' })
@@ -17,7 +18,7 @@ function nextEventFor(memberId: string) {
   const today = toCivilDate(now.value)
   return events.value.find((event) =>
     belongsTo(event, memberId, userId.value)
-    && Date.parse(event.ends_at) >= now.value.getTime()
+    && eventEndMs(event) >= now.value.getTime()
     && toCivilDate(new Date(event.starts_at)) <= today,
   ) ?? null
 }

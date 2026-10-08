@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CalendarClock, CalendarDays, CircleAlert, MapPin } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
+import { eventEndMs } from '~/utils/agenda'
 import { isEventOngoing } from '~/utils/dashboard'
 import { audienceLabel } from '~/utils/family'
 
@@ -13,12 +14,12 @@ const { status, load } = useDayEvents()
 const { members } = useFamily()
 const { userId } = useAuth()
 
-const nextId = computed(() => props.events.find((event) => Date.parse(event.ends_at) >= props.now.getTime())?.id ?? null)
+const nextId = computed(() => props.events.find((event) => eventEndMs(event) >= props.now.getTime())?.id ?? null)
 
 const rows = computed(() =>
   props.events.map((event) => {
     const ongoing = !event.all_day && isEventOngoing(event, props.now)
-    const past = Date.parse(event.ends_at) < props.now.getTime()
+    const past = eventEndMs(event) < props.now.getTime()
     return {
       event,
       ongoing,

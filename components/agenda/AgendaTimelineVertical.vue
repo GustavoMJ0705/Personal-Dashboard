@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { eventKey, isTempEvent } from '~/composables/useAgenda'
 import type { AgendaEvent } from '~/types/models'
-import { layoutTimeline } from '~/utils/agenda'
+import { eventEndMs, layoutTimeline } from '~/utils/agenda'
 
 const props = defineProps<{
   events: AgendaEvent[]
@@ -30,7 +30,7 @@ const nowTop = computed(() => {
   return ((h * 60 + m) / 60) * HOUR_HEIGHT
 })
 
-const isPast = (event: AgendaEvent) => Date.parse(event.ends_at) < props.now.getTime()
+const isPast = (event: AgendaEvent) => eventEndMs(event) < props.now.getTime()
 const compact = (height: number) => height < 56
 
 function blockStyle(block: { lane: number, groupLanes: number, left: number, width: number }) {

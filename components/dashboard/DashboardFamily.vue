@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CircleAlert, Users } from 'lucide-vue-next'
 import type { AgendaEvent, FamilyMember, Task } from '~/types/models'
+import { eventEndMs } from '~/utils/agenda'
 import { belongsTo } from '~/utils/family'
 
 const props = defineProps<{
@@ -18,7 +19,7 @@ const rows = computed(() => (me.value ? [me.value, ...others.value] : others.val
 
 function nextEvent(member: FamilyMember) {
   return props.todayEvents.find((event) =>
-    belongsTo(event, member.user_id, userId.value) && Date.parse(event.ends_at) >= props.now.getTime(),
+    belongsTo(event, member.user_id, userId.value) && eventEndMs(event) >= props.now.getTime(),
   ) ?? null
 }
 

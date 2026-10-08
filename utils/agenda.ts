@@ -18,8 +18,21 @@ export function rangeForDays(days: readonly string[]) {
   }
 }
 
-/** Dia civil de início e de fim; evento que termina exatamente à meia-noite não ocupa o dia seguinte. */
-export function eventDays(event: Pick<AgendaEvent, 'starts_at' | 'ends_at'>) {
+const HALF_DAY = 12 * 60 * 60 * 1000
+const utcDay = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+
+/**
+ * Dia civil de início e de fim. Compromisso com hora: no fuso de quem vê; se termina exatamente
+ * à meia-noite, não ocupa o dia seguinte. Dia inteiro: é a mesma data para todo mundo, em qualquer
+ * fuso. Novos são gravados de 00:00 a 23:59:59 UTC; os antigos, na meia-noite de São Paulo.
+ * Deslocar 12 h para dentro do intervalo acerta os dois casos (qualquer fuso entre -12 h e +12 h).
+ */
+export function eventDays(event: Pick<AgendaEvent, 'starts_at' | 'ends_at'> & { all_day?: boolean }) {
+  if (event.all_day) {
+    const startDay = utcDay(Date.parse(event.starts_at) + HALF_DAY)
+    const endDay = utcDay(Date.parse(event.ends_at) - HALF_DAY)
+    return { startDay, endDay: endDay < startDay ? startDay : endDay }
+  }
   const start = new Date(event.starts_at)
   const end = new Date(event.ends_at)
   const startDay = toCivilDate(start)
@@ -128,4 +141,15 @@ export function formatEventRange(event: AgendaEvent): string {
   const end = formatTime(new Date(event.ends_at))
   if (startDay === endDay) return `${start} – ${end}`
   return `${formatCivilDate(startDay)} ${start} – ${formatCivilDate(endDay)} ${end}`
+}
+
+/** Intervalo gravado para um compromisso de dia inteiro: datas civis em UTC, iguais em qualquer fuso. */
+export function allDayRange(startDay: string, endDay: string) {
+  return { starts_at: `${startDay}T00:00:00.000Z`, ends_at: `${endDay}T23:59:59.000Z` }
+}
+
+/** Fim do compromisso em ms: para dia inteiro, a meia-noite local depois do último dia. */
+export function eventEndMs(event: Pick<AgendaEvent, 'starts_at' | 'ends_at' | 'all_day'>): number {
+  if (!event.all_day) return Date.parse(event.ends_at)
+  return zonedToDate(addDaysToCivilDate(eventDays(event).endDay, 1)).getTime()
 }

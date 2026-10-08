@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { addDaysToCivilDate, civilToDate, civilWeekday } from '~/utils/datetime'
+import { addDaysToCivilDate, civilToDate, civilWeekday, zonedFormatter } from '~/utils/datetime'
 
 const now = useNow()
 const today = computed(() => toCivilDate(now.value))
 
-const monthFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', month: 'long', year: 'numeric' })
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const WEEKDAY_NAMES = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
 
@@ -13,7 +12,8 @@ const month = computed(() => {
   const leading = civilWeekday(first)
   const cells: Array<string | null> = Array.from({ length: leading }, () => null)
   for (let day = first; day.slice(0, 7) === first.slice(0, 7); day = addDaysToCivilDate(day, 1)) cells.push(day)
-  return { label: monthFormatter.format(civilToDate(first)), cells }
+  const label = zonedFormatter('month-year', { month: 'long', year: 'numeric' }).format(civilToDate(first))
+  return { label, cells }
 })
 </script>
 

@@ -2,7 +2,7 @@
 import { Trash2 } from 'lucide-vue-next'
 import type { EventDraft } from '~/composables/useAgenda'
 import type { AgendaEvent } from '~/types/models'
-import { eventDays } from '~/utils/agenda'
+import { allDayRange, eventDays } from '~/utils/agenda'
 import { type Audience, audienceColumns, audienceOf } from '~/utils/family'
 
 const props = defineProps<{
@@ -67,17 +67,20 @@ function toDraft(): EventDraft | null {
   errors.range = complete ? null : 'Preencha a data e a hora de início e de fim.'
   if (errors.title || errors.range) return null
 
-  const startsAt = form.allDay ? zonedToDate(form.startDate) : zonedToDate(form.startDate, form.startTime)
-  const endsAt = form.allDay ? zonedToDate(form.endDate, '23:59', 59) : zonedToDate(form.endDate, form.endTime)
-  if (endsAt < startsAt) {
+  const range = form.allDay
+    ? allDayRange(form.startDate, form.endDate)
+    : {
+        starts_at: zonedToDate(form.startDate, form.startTime).toISOString(),
+        ends_at: zonedToDate(form.endDate, form.endTime).toISOString(),
+      }
+  if (Date.parse(range.ends_at) < Date.parse(range.starts_at)) {
     errors.range = 'O fim precisa ser igual ou depois do início.'
     return null
   }
   return {
     title: form.title.trim(),
     all_day: form.allDay,
-    starts_at: startsAt.toISOString(),
-    ends_at: endsAt.toISOString(),
+    ...range,
     location: form.location.trim() || null,
     ...audienceColumns(audience.value, family.value?.id ?? props.event?.family_id ?? null),
   }

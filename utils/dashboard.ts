@@ -1,3 +1,4 @@
+import { eventDays } from './agenda'
 import type { AgendaEvent } from '~/types/models'
 import { addDaysToCivilDate, formatCivilDate, formatTime, toCivilDate } from './datetime'
 
@@ -25,7 +26,7 @@ export function describeNextEvent(event: AgendaEvent | undefined, now: Date): st
 
   const start = new Date(event.starts_at)
   const today = toCivilDate(now)
-  const day = toCivilDate(start)
+  const day = event.all_day ? eventDays(event).startDay : toCivilDate(start)
 
   if (event.all_day) {
     if (day <= today) return `Hoje, o dia todo: ${event.title}.`

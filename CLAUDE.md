@@ -22,8 +22,20 @@ Uso diário em desktop e celular.
 - Deploy: Vercel, `nitro.preset = 'vercel'`
 - Dev: `supabase` (CLI) como devDependency, `vue-tsc`, `typescript@^5` (o npm instala a 7 por padrão; fixar ^5 para o vue-tsc)
 
-Preferir solução nativa do Nuxt ou do Supabase a dependência externa. Datas:
-usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas.
+Preferir solução nativa do Nuxt ou do Supabase a dependência externa. Datas: `Intl.DateTimeFormat`,
+sem lib de datas, sempre pelos helpers de `utils/datetime.ts` (nunca um `Intl.DateTimeFormat` com fuso fixo em componente).
+
+## Fuso horário
+
+- O site segue o fuso do aparelho de quem usa (ex.: familiar em Portugal vê horário de Lisboa).
+- Plugin `plugins/timezone.ts`: lê o cookie `tz` para o servidor renderizar no fuso certo; no cliente detecta
+  `Intl.DateTimeFormat().resolvedOptions().timeZone`, grava o cookie e troca o fuso depois da hidratação.
+  Sem cookie (primeira visita), o servidor usa `America/Sao_Paulo`.
+- `currentTimeZone()` / `zonedFormatter()` em `utils/datetime.ts`: no cliente o fuso é reativo; no servidor vem do NuxtApp
+  da requisição (`$timeZone`), nunca de variável de módulo.
+- Compromisso de dia inteiro é a mesma data para todo mundo: gravado de 00:00 a 23:59:59 **UTC** (`allDayRange`)
+  e lido por `eventDays`. Para comparar com "agora", usar `eventEndMs`.
+- Tarefa com horário: `due_date` e `due_at` são gravados no fuso de quem criou; o banco só exige data quando há horário.
 
 ## Detalhes do `@nuxtjs/supabase` 2.x
 
@@ -56,7 +68,7 @@ usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`, sem lib de datas
 - Colunas que o cliente não pode mudar (`user_id`, `family_id` de membro, `role`) ficam protegidas por grant
   de coluna: `revoke update` na tabela e `grant update (colunas permitidas)`.
 - Schema só por migration versionada em `supabase/migrations/`, nunca pelo painel.
-- Timestamps em `timestamptz` (UTC). Conversão para America/Sao_Paulo só na exibição.
+- Timestamps em `timestamptz` (UTC). Conversão para o fuso de quem usa só na exibição.
 - Tipos gerados pelo CLI, nunca escritos à mão: `npm run db:types`
   (`supabase gen types typescript --linked --schema public > types/database.types.ts`).
   Aliases legíveis (`Task`, `TaskPriority`...) ficam em `types/models.ts`, derivados do arquivo gerado.
@@ -76,7 +88,7 @@ Todas as tabelas: `id uuid default gen_random_uuid()`, `user_id`, `created_at`, 
 (trigger `public.set_updated_at()`), RLS por `auth.uid()`.
 
 - `tasks`: `title`, `description`, `due_date date` (dia civil), `due_at timestamptz` (horário opcional; check garante
-  que cai no mesmo `due_date` em São Paulo e que não existe sem data), `priority public.task_priority`
+  que não existe sem data), `priority public.task_priority`
   (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`,
   `family_id`, `assignee_ids uuid[]` (default `{}`)
 - `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_id`
@@ -183,7 +195,7 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
   **Nenhum componente chama o Supabase direto.**
 - Estado compartilhado com `useState` por chave. Limpar com `clearNuxtState` no logout.
 - Código em inglês; textos da interface em português do Brasil.
-- Datas `dd/MM/yyyy`, hora 24h, fuso America/Sao_Paulo. Helpers em `utils/datetime.ts`.
+- Datas `dd/MM/yyyy`, hora 24h, no fuso de quem usa. Helpers em `utils/datetime.ts`.
 - Sem comentários óbvios.
 
 ## Como trabalhar comigo
