@@ -2,6 +2,7 @@
 const tasks = useTasks()
 const family = useFamily()
 const events = useEventsRealtime()
+const route = useRoute()
 
 onMounted(() => {
   if (family.status.value === 'idle') void family.load()
@@ -27,6 +28,7 @@ onMounted(() => {
       id="conteudo"
       tabindex="-1"
       class="mx-auto w-full max-w-content px-5 pb-[calc(theme(spacing.tabbar)_+_env(safe-area-inset-bottom)_+_2rem)] pt-6 focus-visible:ring-0 md:px-12 md:pb-16 md:pt-16"
+      :class="route.meta.wide ? 'xl:max-w-none' : undefined"
     >
       <slot />
     </main>

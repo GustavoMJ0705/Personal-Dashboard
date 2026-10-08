@@ -14,7 +14,10 @@ const { status, load } = useDayEvents()
 const { members } = useFamily()
 const { userId } = useAuth()
 
-const nextId = computed(() => props.events.find((event) => eventEndMs(event) >= props.now.getTime())?.id ?? null)
+const nextId = computed(() => {
+  const upcoming = props.events.filter((event) => eventEndMs(event) >= props.now.getTime())
+  return (upcoming.find((event) => !event.all_day) ?? upcoming[0])?.id ?? null
+})
 
 const rows = computed(() =>
   props.events.map((event) => {

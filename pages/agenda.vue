@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { CalendarDays, CircleAlert, Plus } from 'lucide-vue-next'
+import { CalendarClock, CalendarDays, CircleAlert, Plus } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
 import { type AgendaFilter, busyDays, daysBetween, eventsOnDay, matchesFilter, rangeForDays } from '~/utils/agenda'
 import type { Audience } from '~/utils/family'
 
+definePageMeta({ wide: true })
 useHead({ title: 'Agenda' })
 
 const STRIP_BEFORE = 21
@@ -60,6 +61,7 @@ const allDay = computed(() => dayEvents.value.filter((event) => event.all_day))
 const timed = computed(() => dayEvents.value.filter((event) => !event.all_day))
 
 const selectedId = ref<string | null>(null)
+const isWide = useMediaQuery('(min-width: 1280px)')
 const selected = computed(() => dayEvents.value.find((event) => event.id === selectedId.value) ?? null)
 const creating = ref(false)
 const formAnchor = ref<HTMLElement>()
@@ -108,95 +110,125 @@ function retry() {
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 md:flex-col md:justify-center">
-      <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Agenda</h1>
-      <UiButton v-if="!creating" size="sm" @click="startCreating">
-        <Plus class="size-5" aria-hidden="true" />
-        Novo compromisso
-      </UiButton>
-    </div>
-
-    <div ref="formAnchor">
-      <EventForm
-        v-if="creating"
-        :day="date"
-        :default-audience="defaultAudience"
-        class="mt-6"
-        @close="creating = false"
-        @created="onCreated"
-      />
-    </div>
-
-    <AgendaDayStrip
-      class="mt-6"
-      :days="days"
-      :selected="date"
-      :today="today"
-      :busy="busy"
-      @select="go({ date: $event })"
-      @reach-start="extend('start')"
-      @reach-end="extend('end')"
-    />
-
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 md:justify-center">
-      <p aria-live="polite" class="flex items-center gap-2 text-lg font-medium text-ink">
-        <span class="first-letter:uppercase">{{ dayLabel }}</span>
-        <span v-if="date === today" class="rounded-sm bg-accent-soft px-1.5 text-[13px] font-medium text-accent">Hoje</span>
-      </p>
-      <UiButton v-if="date !== today" variant="secondary" size="sm" @click="go({ date: today })">Hoje</UiButton>
-    </div>
-
-    <AgendaFilterChips v-if="family" class="mt-4" :filter="filter" @change="go({ filter: $event })" />
-
-    <div class="mt-5">
-      <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando compromissos" class="flex flex-col gap-2">
-        <div class="h-[8.5rem] animate-pulse rounded-lg bg-surface" />
-      </div>
-
-      <div v-else-if="status === 'error'" role="alert" class="flex flex-col items-start gap-4 rounded-lg bg-danger-soft p-5">
-        <p class="flex items-start gap-2.5 text-base text-danger">
-          <CircleAlert class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-          Não foi possível carregar a agenda. Verifique a conexão e tente de novo.
-        </p>
-        <UiButton variant="secondary" size="sm" @click="retry">Tentar de novo</UiButton>
-      </div>
-
-      <UiEmptyState v-else-if="dayEvents.length === 0" class="bg-panel" :icon="CalendarDays" :text="emptyText">
-        <UiButton v-if="!creating" variant="secondary" size="sm" @click="startCreating">
-          <Plus class="size-4" aria-hidden="true" />
+  <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
+    <div class="min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-4 md:flex-col md:justify-center">
+        <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Agenda</h1>
+        <UiButton v-if="!creating" size="sm" @click="startCreating">
+          <Plus class="size-5" aria-hidden="true" />
           Novo compromisso
         </UiButton>
-      </UiEmptyState>
-
-      <div v-else class="flex flex-col gap-4">
-        <AgendaAllDay v-if="allDay.length" :events="allDay" :selected-id="selectedId" @select="select" />
-        <AgendaTimelineVertical
-          v-if="timed.length"
-          class="md:hidden"
-          :events="timed"
-          :day="date"
-          :now="now"
-          :today="today"
-          :selected-id="selectedId"
-          :day-label="dayLabel"
-          @select="select"
-        />
-        <AgendaTimeline
-          v-if="timed.length"
-          class="hidden md:block"
-          :events="timed"
-          :day="date"
-          :now="now"
-          :today="today"
-          :selected-id="selectedId"
-          :day-label="dayLabel"
-          @select="select"
-        />
-        <p v-if="!selected" class="text-sm text-ink-muted md:text-center">Toque num compromisso para ver os detalhes.</p>
       </div>
 
-      <AgendaEventDetails v-if="selected" :key="selected.id" :event="selected" :day="date" class="mt-4" @close="selectedId = null" />
+      <div ref="formAnchor">
+        <EventForm
+          v-if="creating"
+          :day="date"
+          :default-audience="defaultAudience"
+          class="mt-6"
+          @close="creating = false"
+          @created="onCreated"
+        />
+      </div>
+
+      <AgendaDayStrip
+        class="mt-6"
+        :days="days"
+        :selected="date"
+        :today="today"
+        :busy="busy"
+        @select="go({ date: $event })"
+        @reach-start="extend('start')"
+        @reach-end="extend('end')"
+      />
+
+      <div class="mt-5 flex flex-wrap items-center justify-between gap-3 md:justify-center">
+        <p aria-live="polite" class="flex items-center gap-2 text-lg font-medium text-ink">
+          <span class="first-letter:uppercase">{{ dayLabel }}</span>
+          <span v-if="date === today" class="rounded-sm bg-accent-soft px-1.5 text-[13px] font-medium text-accent">Hoje</span>
+        </p>
+        <UiButton v-if="date !== today" variant="secondary" size="sm" @click="go({ date: today })">Hoje</UiButton>
+      </div>
+
+      <AgendaFilterChips v-if="family" class="mt-4" :filter="filter" @change="go({ filter: $event })" />
+
+      <div class="mt-5">
+        <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando compromissos" class="flex flex-col gap-2">
+          <div class="h-[8.5rem] animate-pulse rounded-lg bg-surface" />
+        </div>
+
+        <div v-else-if="status === 'error'" role="alert" class="flex flex-col items-start gap-4 rounded-lg bg-danger-soft p-5">
+          <p class="flex items-start gap-2.5 text-base text-danger">
+            <CircleAlert class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            Não foi possível carregar a agenda. Verifique a conexão e tente de novo.
+          </p>
+          <UiButton variant="secondary" size="sm" @click="retry">Tentar de novo</UiButton>
+        </div>
+
+        <UiEmptyState v-else-if="dayEvents.length === 0" class="bg-panel" :icon="CalendarDays" :text="emptyText">
+          <UiButton v-if="!creating" variant="secondary" size="sm" @click="startCreating">
+            <Plus class="size-4" aria-hidden="true" />
+            Novo compromisso
+          </UiButton>
+        </UiEmptyState>
+
+        <div v-else class="flex flex-col gap-4">
+          <AgendaAllDay v-if="allDay.length" class="md:hidden" :events="allDay" :selected-id="selectedId" @select="select" />
+          <AgendaTimelineVertical
+            v-if="timed.length"
+            class="md:hidden"
+            :events="timed"
+            :day="date"
+            :now="now"
+            :today="today"
+            :selected-id="selectedId"
+            :day-label="dayLabel"
+            @select="select"
+          />
+          <AgendaTimeline
+            v-if="timed.length || allDay.length"
+            class="hidden md:block"
+            :events="timed"
+            :all-day="allDay"
+            :day="date"
+            :now="now"
+            :today="today"
+            :selected-id="selectedId"
+            :day-label="dayLabel"
+            @select="select"
+          />
+          <p v-if="!selected" class="text-sm text-ink-muted md:text-center">Toque num compromisso para ver os detalhes.</p>
+        </div>
+
+        <AgendaEventDetails
+          v-if="selected && !isWide"
+          :key="selected.id"
+          :event="selected"
+          :day="date"
+          class="mt-4"
+          @close="selectedId = null"
+        />
+      </div>
     </div>
+
+    <aside class="hidden xl:sticky xl:top-8 xl:block" aria-label="Compromissos do dia">
+      <section class="panel" aria-labelledby="lista-do-dia">
+        <UiSectionTitle id="lista-do-dia" title="Compromissos do dia" :icon="CalendarClock" :count="status === 'ready' ? dayEvents.length : null" />
+        <div v-if="status === 'loading' || status === 'idle'" class="mt-4 flex flex-col gap-2" aria-label="Carregando compromissos">
+          <div v-for="n in 3" :key="n" class="h-12 animate-pulse rounded bg-surface" />
+        </div>
+        <p v-else-if="dayEvents.length === 0" class="mt-4 text-[15px] text-ink-muted">{{ emptyText }}</p>
+        <AgendaDayList v-else class="mt-4 -mx-1" :events="dayEvents" :selected-id="selectedId" :now="now" @select="select" />
+      </section>
+
+      <AgendaEventDetails
+        v-if="selected && isWide"
+        :key="selected.id"
+        :event="selected"
+        :day="date"
+        class="mt-4"
+        @close="selectedId = null"
+      />
+    </aside>
   </div>
 </template>

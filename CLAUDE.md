@@ -163,6 +163,10 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 - Mobile: barra de abas fixa embaixo (respeitar `env(safe-area-inset-bottom)`). Desktop (md+): trilho lateral fixo à esquerda com wordmark, navegação e "Sair".
 - Conteúdo em coluna única, `max-w` ~44rem. No celular, alinhado à esquerda; no desktop (md+), a coluna fica centralizada
   na área ao lado do trilho, com o topo de cada página (título, saudação, relógio) centralizado e os painéis empilhados no mesmo eixo.
+  Páginas com `definePageMeta({ wide: true })` usam a largura toda no desktop largo (xl+):
+  - Início: topo centralizado; tarefas, compromissos e família em três colunas lado a lado.
+  - Agenda: agenda no centro e, à direita, a lista "Compromissos do dia" (`AgendaDayList`) com os detalhes abaixo dela.
+  - Na linha do tempo horizontal, compromissos de dia inteiro aparecem como faixas no topo; no celular seguem como chips.
 - Só mostrar na navegação as telas que já existem.
 - Navegação: Início, Agenda, Tarefas, Família.
 - **Início (a peça marcante, o resto fica quieto):** saudação pelo horário com o meu nome ("Boa tarde, Gustavo"),

@@ -4,6 +4,7 @@ import { describeNextEvent, describeTasks, pickNextEvent } from '~/utils/dashboa
 import { isMine } from '~/utils/family'
 import { groupOpenTasks } from '~/utils/tasks'
 
+definePageMeta({ wide: true })
 useHead({ title: 'Início' })
 
 const { user, userId } = useAuth()
@@ -53,7 +54,7 @@ const summary = computed(() => {
       <p v-if="summary" class="mt-6 max-w-[34rem] text-xl font-medium leading-snug text-ink md:text-2xl">{{ summary }}</p>
     </header>
 
-    <div class="mt-10 flex flex-col gap-5 md:mt-12 md:gap-6">
+    <div class="mt-10 flex flex-col gap-5 md:mt-12 md:gap-6 xl:grid xl:grid-cols-3 xl:items-stretch">
       <DashboardTasks :today="today" :overdue="grouped.overdue" :due-today="grouped.today" />
       <DashboardEvents :events="myTodayEvents" :now="now" />
       <DashboardFamily :now="now" :today="today" :today-events="todayEvents" :open-tasks="openTasks" />
