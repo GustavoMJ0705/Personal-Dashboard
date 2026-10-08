@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarClock, CalendarDays, CircleAlert, Plus } from 'lucide-vue-next'
 import type { AgendaEvent } from '~/types/models'
-import { type AgendaFilter, busyDays, daysBetween, eventsOnDay, matchesFilter, rangeForDays } from '~/utils/agenda'
+import { type AgendaFilter, busyDays, daysBetween, eventDays, eventsOnDay, formatWeekRange, matchesFilter, rangeForDays, weekDays } from '~/utils/agenda'
 import type { Audience } from '~/utils/family'
 
 definePageMeta({ wide: true })
@@ -33,6 +33,10 @@ const filter = computed<AgendaFilter>(() => {
   return 'all'
 })
 
+type AgendaView = 'day' | 'week'
+const view = computed<AgendaView>(() => (route.query.visao === 'semana' ? 'week' : 'day'))
+const week = computed(() => weekDays(date.value))
+
 const stripStart = ref(addDaysToCivilDate(date.value, -STRIP_BEFORE))
 const stripEnd = ref(addDaysToCivilDate(date.value, STRIP_AFTER))
 const days = computed(() => daysBetween(stripStart.value, stripEnd.value))
@@ -62,11 +66,18 @@ const timed = computed(() => dayEvents.value.filter((event) => !event.all_day))
 
 const selectedId = ref<string | null>(null)
 const isWide = useMediaQuery('(min-width: 1280px)')
-const selected = computed(() => dayEvents.value.find((event) => event.id === selectedId.value) ?? null)
+const selected = computed(() => visible.value.find((event) => event.id === selectedId.value) ?? null)
+const selectedDay = computed(() => {
+  if (!selected.value) return date.value
+  const { startDay, endDay } = eventDays(selected.value)
+  return startDay <= date.value && date.value <= endDay ? date.value : startDay
+})
 const creating = ref(false)
 const formAnchor = ref<HTMLElement>()
+const asideFormAnchor = ref<HTMLElement>()
 
 const dayLabel = computed(() => formatLongDate(civilToDate(date.value)))
+const weekLabel = computed(() => formatWeekRange(week.value))
 const emptyText = computed(() => {
   if (filter.value === 'all') return 'Nenhum compromisso neste dia.'
   if (filter.value === 'me') return 'Nenhum compromisso seu neste dia.'
@@ -79,14 +90,22 @@ const defaultAudience = computed<Audience>(() => {
   return { kind: 'me' }
 })
 
-function go(next: { date?: string, filter?: AgendaFilter }) {
+function go(next: { date?: string, filter?: AgendaFilter, view?: AgendaView }) {
   const nextDate = next.date ?? date.value
   const nextFilter = next.filter ?? filter.value
+  const nextView = next.view ?? view.value
   const quem = nextFilter === 'all'
     ? undefined
     : nextFilter === 'me' ? 'eu' : nextFilter === 'family' ? 'familia' : nextFilter.slice('member:'.length)
   if (next.date !== undefined) selectedId.value = null
-  router.replace({ query: { ...route.query, data: nextDate === today.value ? undefined : nextDate, quem } })
+  router.replace({
+    query: {
+      ...route.query,
+      data: nextDate === today.value ? undefined : nextDate,
+      quem,
+      visao: nextView === 'week' ? 'semana' : undefined,
+    },
+  })
 }
 
 function select(event: AgendaEvent) {
@@ -97,8 +116,13 @@ function select(event: AgendaEvent) {
 function startCreating() {
   selectedId.value = null
   creating.value = true
-  nextTick(() => formAnchor.value?.scrollIntoView({ block: 'nearest' }))
+  nextTick(() => (isWide.value ? asideFormAnchor : formAnchor).value?.scrollIntoView({ block: 'nearest' }))
 }
+
+const views: ReadonlyArray<{ key: AgendaView, label: string }> = [
+  { key: 'day', label: 'Dia' },
+  { key: 'week', label: 'Semana' },
+]
 
 function onCreated(startDay: string) {
   if (startDay !== date.value) go({ date: startDay })
@@ -110,17 +134,17 @@ function retry() {
 </script>
 
 <template>
-  <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
-    <div class="min-w-0">
-      <div class="flex flex-wrap items-center justify-between gap-4 md:flex-col md:justify-center">
-        <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Agenda</h1>
-        <UiButton v-if="!creating" size="sm" @click="startCreating">
-          <Plus class="size-5" aria-hidden="true" />
-          Novo compromisso
-        </UiButton>
-      </div>
+  <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-x-8">
+    <div class="flex flex-wrap items-center justify-between gap-4 md:flex-col md:justify-center xl:col-start-1 xl:row-start-1">
+      <h1 class="font-display text-3xl font-semibold tracking-[-0.02em] text-ink md:text-4xl">Agenda</h1>
+      <UiButton v-if="!creating" size="sm" class="xl:hidden" @click="startCreating">
+        <Plus class="size-5" aria-hidden="true" />
+        Novo compromisso
+      </UiButton>
+    </div>
 
-      <div ref="formAnchor">
+    <div class="min-w-0 xl:col-start-1 xl:row-start-2">
+      <div v-if="!isWide" ref="formAnchor">
         <EventForm
           v-if="creating"
           :day="date"
@@ -144,10 +168,25 @@ function retry() {
 
       <div class="mt-5 flex flex-wrap items-center justify-between gap-3 md:justify-center">
         <p aria-live="polite" class="flex items-center gap-2 text-lg font-medium text-ink">
-          <span class="first-letter:uppercase">{{ dayLabel }}</span>
-          <span v-if="date === today" class="rounded-sm bg-accent-soft px-1.5 text-[13px] font-medium text-accent">Hoje</span>
+          <span class="first-letter:uppercase">{{ view === 'week' ? weekLabel : dayLabel }}</span>
+          <span v-if="view === 'day' && date === today" class="rounded-sm bg-accent-soft px-1.5 text-[13px] font-medium text-accent">Hoje</span>
         </p>
-        <UiButton v-if="date !== today" variant="secondary" size="sm" @click="go({ date: today })">Hoje</UiButton>
+        <div class="flex items-center gap-2">
+          <div role="group" aria-label="Visão" class="inline-flex h-10 rounded border border-line-strong p-1">
+            <button
+              v-for="item in views"
+              :key="item.key"
+              type="button"
+              class="rounded-sm px-3.5 text-sm font-medium transition-colors"
+              :class="view === item.key ? 'bg-accent-soft text-accent' : 'text-ink-muted hover:text-ink'"
+              :aria-pressed="view === item.key"
+              @click="go({ view: item.key })"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+          <UiButton v-if="date !== today" variant="secondary" size="sm" @click="go({ date: today })">Hoje</UiButton>
+        </div>
       </div>
 
       <AgendaFilterChips v-if="family" class="mt-4" :filter="filter" @change="go({ filter: $event })" />
@@ -164,6 +203,30 @@ function retry() {
           </p>
           <UiButton variant="secondary" size="sm" @click="retry">Tentar de novo</UiButton>
         </div>
+
+        <template v-else-if="view === 'week'">
+          <AgendaWeekGrid
+            class="hidden md:block"
+            :days="week"
+            :events="visible"
+            :now="now"
+            :today="today"
+            :selected-day="date"
+            :selected-id="selectedId"
+            :label="weekLabel"
+            @select="select"
+            @pick-day="go({ date: $event })"
+          />
+          <AgendaWeekList
+            class="md:hidden"
+            :days="week"
+            :events="visible"
+            :today="today"
+            :now="now"
+            :selected-id="selectedId"
+            @select="select"
+          />
+        </template>
 
         <UiEmptyState v-else-if="dayEvents.length === 0" class="bg-panel" :icon="CalendarDays" :text="emptyText">
           <UiButton v-if="!creating" variant="secondary" size="sm" @click="startCreating">
@@ -197,35 +260,55 @@ function retry() {
             :day-label="dayLabel"
             @select="select"
           />
-          <p v-if="!selected" class="text-sm text-ink-muted md:text-center">Toque num compromisso para ver os detalhes.</p>
         </div>
+
+        <p v-if="status === 'ready' && !selected && visible.length" class="mt-4 text-sm text-ink-muted md:text-center">
+          Toque num compromisso para ver os detalhes.
+        </p>
 
         <AgendaEventDetails
           v-if="selected && !isWide"
           :key="selected.id"
           :event="selected"
-          :day="date"
+          :day="selectedDay"
           class="mt-4"
           @close="selectedId = null"
         />
       </div>
     </div>
 
-    <aside class="hidden xl:sticky xl:top-8 xl:block" aria-label="Compromissos do dia">
+    <aside class="hidden xl:sticky xl:top-8 xl:col-start-2 xl:row-start-2 xl:mt-6 xl:block xl:self-start" aria-label="Compromissos do dia">
       <section class="panel" aria-labelledby="lista-do-dia">
         <UiSectionTitle id="lista-do-dia" title="Compromissos do dia" :icon="CalendarClock" :count="status === 'ready' ? dayEvents.length : null" />
+        <p class="mt-1 pl-11 text-sm text-ink-muted first-letter:uppercase">{{ dayLabel }}</p>
+
+        <div ref="asideFormAnchor" class="mt-4">
+          <EventForm
+            v-if="isWide && creating"
+            :day="date"
+            :default-audience="defaultAudience"
+            class="!p-3"
+            @close="creating = false"
+            @created="onCreated"
+          />
+          <UiButton v-else class="w-full" @click="startCreating">
+            <Plus class="size-5" aria-hidden="true" />
+            Novo compromisso
+          </UiButton>
+        </div>
+
         <div v-if="status === 'loading' || status === 'idle'" class="mt-4 flex flex-col gap-2" aria-label="Carregando compromissos">
           <div v-for="n in 3" :key="n" class="h-12 animate-pulse rounded bg-surface" />
         </div>
         <p v-else-if="dayEvents.length === 0" class="mt-4 text-[15px] text-ink-muted">{{ emptyText }}</p>
-        <AgendaDayList v-else class="mt-4 -mx-1" :events="dayEvents" :selected-id="selectedId" :now="now" @select="select" />
+        <AgendaDayList v-else class="-mx-1 mt-4" :events="dayEvents" :selected-id="selectedId" :now="now" @select="select" />
       </section>
 
       <AgendaEventDetails
         v-if="selected && isWide"
         :key="selected.id"
         :event="selected"
-        :day="date"
+        :day="selectedDay"
         class="mt-4"
         @close="selectedId = null"
       />

@@ -165,14 +165,17 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
   na área ao lado do trilho, com o topo de cada página (título, saudação, relógio) centralizado e os painéis empilhados no mesmo eixo.
   Páginas com `definePageMeta({ wide: true })` usam a largura toda no desktop largo (xl+):
   - Início: topo centralizado; tarefas, compromissos e família em três colunas lado a lado.
-  - Agenda: agenda no centro e, à direita, a lista "Compromissos do dia" (`AgendaDayList`) com os detalhes abaixo dela.
+  - Agenda: agenda no centro e, à direita, a lista "Compromissos do dia" (`AgendaDayList`), alinhada com a faixa de dias,
+    com o botão e o formulário de "Novo compromisso" dentro dela e os detalhes abaixo.
   - Na linha do tempo horizontal, compromissos de dia inteiro aparecem como faixas no topo; no celular seguem como chips.
 - Só mostrar na navegação as telas que já existem.
 - Navegação: Início, Agenda, Tarefas, Família.
 - **Início (a peça marcante, o resto fica quieto):** saudação pelo horário com o meu nome ("Boa tarde, Gustavo"),
   a hora atual grande em Bricolage com numerais tabulares, a data por extenso e uma frase que responde
   "o que fazer agora". Abaixo: tarefas do dia, compromissos do dia (próximo em destaque) e situação da família.
-- **Agenda:** faixa de dias rolável (scroll-snap) no topo; abaixo, a linha do tempo do dia. No desktop (md+) as horas
+- **Agenda:** faixa de dias rolável (scroll-snap) no topo; visão Dia ou Semana (`?visao=semana`). Semana: grade de 7 colunas
+  (segunda a domingo) com horas na vertical no desktop (`AgendaWeekGrid`) e lista por dia no celular (`AgendaWeekList`).
+  Barras de rolagem da agenda na cor de destaque (`.scrollbar-accent`). Na visão Dia, a linha do tempo do dia. No desktop (md+) as horas
   correm na horizontal; no celular, na vertical (coluna rolável de 00h a 24h, sobreposições lado a lado).
   Linha de "agora" e blocos posicionados pelo horário nas duas. Dia inteiro numa faixa própria.
   Detalhes e edição inline abaixo da linha do tempo. Sem cor por pessoa: quem é o dono aparece pelo avatar de iniciais.

@@ -1,5 +1,5 @@
 import type { AgendaEvent } from '~/types/models'
-import { addDaysToCivilDate, formatCivilDate, formatTime, toCivilDate, zonedToDate } from './datetime'
+import { addDaysToCivilDate, civilWeekday, formatCivilDate, formatDayMonth, formatTime, toCivilDate, zonedToDate } from './datetime'
 
 /** Lista de dias civis de `first` a `last`, inclusive. */
 export function daysBetween(first: string, last: string): string[] {
@@ -152,4 +152,18 @@ export function allDayRange(startDay: string, endDay: string) {
 export function eventEndMs(event: Pick<AgendaEvent, 'starts_at' | 'ends_at' | 'all_day'>): number {
   if (!event.all_day) return Date.parse(event.ends_at)
   return zonedToDate(addDaysToCivilDate(eventDays(event).endDay, 1)).getTime()
+}
+
+/** Os 7 dias (segunda a domingo) da semana que contém o dia civil. */
+export function weekDays(civil: string): string[] {
+  const monday = addDaysToCivilDate(civil, -((civilWeekday(civil) + 6) % 7))
+  return Array.from({ length: 7 }, (_, i) => addDaysToCivilDate(monday, i))
+}
+
+/** "5 a 11 de outubro" ou "29 de setembro a 5 de outubro". */
+export function formatWeekRange(days: readonly string[]): string {
+  const first = days[0] ?? ''
+  const last = days[days.length - 1] ?? first
+  if (first.slice(0, 7) === last.slice(0, 7)) return `${Number(first.slice(8))} a ${formatDayMonth(last)}`
+  return `${formatDayMonth(first)} a ${formatDayMonth(last)}`
 }

@@ -64,7 +64,7 @@ watch(() => props.day, () => nextTick(scrollToFocus))
     tabindex="0"
     role="region"
     :aria-label="`Linha do tempo de ${dayLabel}. Role para os lados para ver outros horários.`"
-    class="overflow-x-auto overscroll-x-contain rounded-lg border bg-panel"
+    class="scrollbar-accent overflow-x-auto overscroll-x-contain rounded-lg border bg-panel"
   >
     <div class="relative" :style="{ width: `${totalWidth}px`, height: `${height}px` }">
       <div
