@@ -20,7 +20,7 @@ const editingId = ref<string | null>(null)
       </template>
     </UiSectionTitle>
 
-    <TaskQuickAdd :today="today" :with-due-date="false" class="mt-4" />
+    <TaskQuickAdd :today="today" collapsible class="mt-4" />
 
     <div v-if="status === 'loading' || status === 'idle'" aria-label="Carregando tarefas" class="mt-6 divide-y divide-line border-y">
       <div v-for="n in 3" :key="n" class="flex items-center gap-3 py-4">

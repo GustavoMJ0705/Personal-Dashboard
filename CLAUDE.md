@@ -190,6 +190,8 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 - A tela inicial responde "o que preciso fazer agora" sem clique.
 - Criar, concluir e adiar tarefa em no máximo dois toques. "Adiar" = para o dia seguinte ao vencimento (ou a amanhã, se já venceu),
   mantendo o horário. Dentro do dia, tarefas com horário vêm primeiro, em ordem de hora; horário que já passou fica em `danger`.
+- Criação rápida de tarefa (`TaskQuickAdd`) sempre com dia, horário e "Para quem". No Início (`collapsible`), as opções aparecem
+  ao focar o campo e recolhem se nada mudou; tarefa criada para outro dia mostra toast de confirmação.
 - Updates otimistas com rollback e toast de erro se o Supabase falhar. No create otimista, usar id temporário e trocar pela linha real; deduplicar por id, porque o eco do Realtime pode chegar antes da resposta.
 - Ao voltar o app para primeiro plano (`visibilitychange`), recarregar em silêncio (tarefas, agenda, família): o canal do Realtime cai em segundo plano no celular.
 - Relógio: estado inicial vindo do servidor (`useState`) para não quebrar a hidratação, atualizando a cada virada de minuto no cliente.

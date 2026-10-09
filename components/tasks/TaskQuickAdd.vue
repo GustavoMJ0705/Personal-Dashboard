@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Clock3, Plus } from 'lucide-vue-next'
-import { addDaysToCivilDate } from '~/utils/datetime'
+import { addDaysToCivilDate, formatDayLabel } from '~/utils/datetime'
 import { type Audience, audienceColumns } from '~/utils/family'
 import { dueAtFor } from '~/utils/tasks'
 
-const props = withDefaults(defineProps<{ today: string, withDueDate?: boolean }>(), { withDueDate: true })
+/** `collapsible`: as opções (dia, horário, para quem) só aparecem ao tocar no campo. */
+const props = withDefaults(defineProps<{ today: string, collapsible?: boolean }>(), { collapsible: false })
 
 const { create } = useTasks()
+const toast = useToast()
 const { family } = useFamily()
 const audience = ref<Audience>({ kind: 'me' })
 
@@ -27,6 +29,18 @@ function openTimePicker() {
   }
 }
 const input = ref<HTMLInputElement>()
+const form = ref<HTMLFormElement>()
+const expanded = ref(!props.collapsible)
+
+const isPristine = () => !title.value.trim() && due.value === props.today && !time.value && audience.value.kind === 'me'
+
+function onFocusOut() {
+  if (!props.collapsible) return
+  setTimeout(() => {
+    if (form.value?.contains(document.activeElement)) return
+    if (isPristine()) expanded.value = false
+  })
+}
 
 const tomorrow = computed(() => addDaysToCivilDate(props.today, 1))
 const presets = computed(() => [
@@ -45,22 +59,26 @@ watch(
 async function submit() {
   const value = title.value.trim()
   if (!value) return
-  const dueAt = props.withDueDate ? dueAtFor(due.value || null, time.value || null) : null
+  const dueDate = due.value || null
+  const dueAt = dueAtFor(dueDate, time.value || null)
   title.value = ''
   time.value = ''
   input.value?.focus()
   const ok = await create({
     title: value,
-    due_date: props.withDueDate ? due.value || null : props.today,
+    due_date: dueDate,
     due_at: dueAt,
     ...audienceColumns(audience.value, family.value?.id ?? null),
   })
   if (!ok && !title.value) title.value = value
+  else if (ok && props.collapsible && dueDate !== props.today) {
+    toast.success(dueDate ? `Tarefa adicionada para ${formatDayLabel(dueDate, props.today).toLowerCase()}.` : 'Tarefa adicionada sem data.')
+  }
 }
 </script>
 
 <template>
-  <form class="rounded border border-line-strong focus-within:border-accent" @submit.prevent="submit">
+  <form ref="form" class="rounded border border-line-strong focus-within:border-accent" @submit.prevent="submit" @focusin="expanded = true" @focusout="onFocusOut">
     <div class="flex items-center gap-2 pl-3.5 pr-1.5">
       <Plus class="size-5 shrink-0 text-ink-subtle" aria-hidden="true" />
       <label for="nova-tarefa" class="sr-only">Nova tarefa</label>
@@ -72,13 +90,13 @@ async function submit() {
         autocomplete="off"
         enterkeyhint="done"
         maxlength="500"
-        :placeholder="withDueDate ? 'Adicionar tarefa' : 'Adicionar tarefa para hoje'"
+        placeholder="Adicionar tarefa"
         class="h-12 min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink-subtle focus-visible:ring-0"
       >
       <UiButton v-if="title.trim()" type="submit" size="sm">Adicionar</UiButton>
     </div>
 
-    <fieldset v-if="withDueDate" class="flex flex-wrap items-center gap-1.5 border-t px-2.5 py-2">
+    <fieldset v-if="expanded" class="flex flex-wrap items-center gap-1.5 border-t px-2.5 py-2">
       <legend class="sr-only">Vencimento</legend>
       <button
         v-for="preset in presets"
@@ -117,7 +135,7 @@ async function submit() {
       </div>
     </fieldset>
 
-    <div v-if="withDueDate && family" class="border-t px-2.5 py-2">
+    <div v-if="expanded && family" class="border-t px-2.5 py-2">
       <FamilyPeoplePicker id="nova-tarefa-para-quem" v-model="audience" compact />
     </div>
   </form>
