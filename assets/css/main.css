@@ -99,9 +99,30 @@
     }
   }
 
+  /* Barras de rolagem azuis no site todo (scrollbar-color é herdado por toda área rolável). */
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    scrollbar-color: rgb(var(--color-accent)) rgb(var(--color-surface));
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--color-surface));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-accent));
+    border: 2px solid rgb(var(--color-surface));
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-accent-hover));
   }
 
   body {
@@ -164,10 +185,9 @@
 }
 
 @layer utilities {
-  /* Barra de rolagem fina na cor de destaque (agenda). */
+  /* Versão fina da barra azul, para áreas internas (agenda). */
   .scrollbar-accent {
     scrollbar-width: thin;
-    scrollbar-color: rgb(var(--color-accent)) rgb(var(--color-surface));
   }
 
   .scrollbar-accent::-webkit-scrollbar {
@@ -176,16 +196,10 @@
   }
 
   .scrollbar-accent::-webkit-scrollbar-track {
-    background: rgb(var(--color-surface));
     border-radius: 9999px;
   }
 
   .scrollbar-accent::-webkit-scrollbar-thumb {
-    background: rgb(var(--color-accent));
-    border-radius: 9999px;
-  }
-
-  .scrollbar-accent::-webkit-scrollbar-thumb:hover {
-    background: rgb(var(--color-accent-hover));
+    border: 0;
   }
 }

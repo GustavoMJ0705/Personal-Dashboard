@@ -179,7 +179,7 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 - **Agenda:** faixa de dias rolável (scroll-snap) no topo; visão Dia ou Semana (`?visao=semana`). Semana: grade de 7 colunas
   (segunda a domingo) com horas na vertical no desktop (`AgendaWeekGrid`) e lista por dia no celular (`AgendaWeekList`).
   A grade da semana não tem rolagem interna: a altura da hora se ajusta para as 24 h caberem na tela (14–48 px).
-  Barras de rolagem da agenda na cor de destaque (`.scrollbar-accent`). Na visão Dia, a linha do tempo do dia. No desktop (md+) as horas
+  Barras de rolagem do site todo na cor de destaque (`scrollbar-color` no `html`); na agenda, a versão fina `.scrollbar-accent`. Na visão Dia, a linha do tempo do dia. No desktop (md+) as horas
   correm na horizontal; no celular, na vertical (coluna rolável de 00h a 24h, sobreposições lado a lado).
   Linha de "agora" e blocos posicionados pelo horário nas duas. Dia inteiro numa faixa própria.
   Detalhes e edição inline abaixo da linha do tempo. Sem cor por pessoa: quem é o dono aparece pelo avatar de iniciais.
