@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CircleAlert, Sparkles } from 'lucide-vue-next'
-import { OPEN_GROUPS, groupOpenTasks, sortCompletedTasks } from '~/utils/tasks'
+import { OPEN_GROUPS, groupOpenTasks, sortCompletedTasks, tasksOnDay } from '~/utils/tasks'
 
 useHead({ title: 'Tarefas' })
 
@@ -19,8 +19,9 @@ const today = computed(() => toCivilDate(now.value))
 const tab = computed<Tab>(() => (route.query.aba === 'concluidas' ? 'completed' : 'open'))
 const editingId = ref<string | null>(null)
 
-const openTasks = computed(() => tasks.value.filter((task) => task.completed_at === null))
-const completedTasks = computed(() => sortCompletedTasks(tasks.value.filter((task) => task.completed_at !== null)))
+const dayTasks = computed(() => tasksOnDay(tasks.value, today.value))
+const openTasks = computed(() => dayTasks.value.filter((task) => task.completed_at === null))
+const completedTasks = computed(() => sortCompletedTasks(dayTasks.value.filter((task) => task.completed_at !== null)))
 const groups = computed(() => {
   const grouped = groupOpenTasks(openTasks.value, today.value)
   return OPEN_GROUPS.map((group) => ({ ...group, tasks: grouped[group.key] })).filter((group) => group.tasks.length > 0)

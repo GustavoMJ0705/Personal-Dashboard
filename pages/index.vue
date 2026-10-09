@@ -2,7 +2,7 @@
 import { eventEndMs, eventsOnDay } from '~/utils/agenda'
 import { describeNextEvent, describeTasks, pickNextEvent } from '~/utils/dashboard'
 import { isMine } from '~/utils/family'
-import { groupOpenTasks } from '~/utils/tasks'
+import { groupOpenTasks, tasksOnDay } from '~/utils/tasks'
 
 definePageMeta({ wide: true })
 useHead({ title: 'Início' })
@@ -19,7 +19,8 @@ refreshOnVisible()
 const now = useNow()
 const today = computed(() => toCivilDate(now.value))
 
-const openTasks = computed(() => tasks.value.filter((task) => task.completed_at === null))
+const dayTasks = computed(() => tasksOnDay(tasks.value, today.value))
+const openTasks = computed(() => dayTasks.value.filter((task) => task.completed_at === null))
 const grouped = computed(() => groupOpenTasks(openTasks.value.filter((task) => isMine(task, userId.value)), today.value))
 
 const myEvents = computed(() => events.value.filter((event) => isMine(event, userId.value)))

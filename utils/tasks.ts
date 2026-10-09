@@ -1,5 +1,5 @@
 import type { Task, TaskPriority } from '~/types/models'
-import { addDaysToCivilDate, formatTime, zonedToDate } from './datetime'
+import { addDaysToCivilDate, formatTime, toCivilDate, zonedToDate } from './datetime'
 
 export type OpenGroupKey = 'overdue' | 'today' | 'tomorrow' | 'upcoming' | 'undated'
 export type TaskRowContext = OpenGroupKey | 'completed'
@@ -68,4 +68,24 @@ export function dueAtFor(date: string | null, time: string | null): string | nul
 /** "14:30" para tarefas com hora; null para as que não têm. */
 export function taskTime(task: Pick<Task, 'due_at'>): string | null {
   return task.due_at ? formatTime(new Date(task.due_at)) : null
+}
+
+/**
+ * Tarefa diária vista no dia de hoje: a partir da data de início, vence hoje no mesmo horário
+ * e só conta como concluída se foi concluída hoje. As outras tarefas voltam como estão.
+ */
+export function taskOnDay(task: Task, today: string): Task {
+  if (task.recurrence !== 'daily' || task.due_date === null || task.due_date > today) return task
+  const doneToday = task.completed_at !== null && toCivilDate(new Date(task.completed_at)) === today
+  const time = taskTime(task)
+  return {
+    ...task,
+    due_date: today,
+    due_at: dueAtFor(today, time),
+    completed_at: doneToday ? task.completed_at : null,
+  }
+}
+
+export function tasksOnDay(tasks: readonly Task[], today: string): Task[] {
+  return tasks.map((task) => taskOnDay(task, today))
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarArrowUp, Check, Clock3, Users } from 'lucide-vue-next'
+import { CalendarArrowUp, Check, Clock3, Repeat, Users } from 'lucide-vue-next'
 import { isTempTask } from '~/composables/useTasks'
 import type { Task } from '~/types/models'
 import { addDaysToCivilDate, formatCivilDate, formatDate } from '~/utils/datetime'
@@ -76,7 +76,7 @@ function closeEditor() {
           class="block break-words text-base leading-snug"
           :class="done ? 'text-ink-subtle line-through' : 'text-ink'"
         >{{ task.title }}</span>
-        <span v-if="dueText || time || forWhom || task.priority !== 'normal' || task.description" class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+        <span v-if="dueText || time || task.recurrence || forWhom || task.priority !== 'normal' || task.description" class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
           <span v-if="dueText" :class="context === 'overdue' ? 'font-medium text-danger' : 'text-ink-muted'">{{ dueText }}</span>
           <span
             v-if="time"
@@ -85,6 +85,10 @@ function closeEditor() {
           >
             <Clock3 class="size-3.5" aria-hidden="true" />
             <span><span class="sr-only">{{ timePassed ? 'Era para as' : 'Às' }} </span>{{ time }}</span>
+          </span>
+          <span v-if="task.recurrence === 'daily'" class="inline-flex items-center gap-1 text-ink-muted">
+            <Repeat class="size-3.5" aria-hidden="true" />
+            Todo dia
           </span>
           <span v-if="forWhom" class="inline-flex items-center gap-1 text-ink-muted">
             <Users class="size-3.5" aria-hidden="true" />
@@ -100,7 +104,7 @@ function closeEditor() {
       </button>
 
       <button
-        v-if="!done"
+        v-if="!done && !task.recurrence"
         type="button"
         class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded px-2.5 text-[15px] font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink disabled:opacity-50"
         :disabled="syncing"

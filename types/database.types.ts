@@ -172,6 +172,7 @@ export type Database = {
           family_id: string | null;
           id: string;
           priority: Database["public"]["Enums"]["task_priority"];
+          recurrence: Database["public"]["Enums"]["task_recurrence"] | null;
           title: string;
           updated_at: string;
           user_id: string;
@@ -187,6 +188,7 @@ export type Database = {
           family_id?: string | null;
           id?: string;
           priority?: Database["public"]["Enums"]["task_priority"];
+          recurrence?: Database["public"]["Enums"]["task_recurrence"] | null;
           title: string;
           updated_at?: string;
           user_id?: string;
@@ -201,6 +203,7 @@ export type Database = {
           family_id?: string | null;
           id?: string;
           priority?: Database["public"]["Enums"]["task_priority"];
+          recurrence?: Database["public"]["Enums"]["task_recurrence"] | null;
           title?: string;
           updated_at?: string;
           user_id?: string;
@@ -237,6 +240,7 @@ export type Database = {
       family_role: "owner" | "member";
       member_status: "at_home" | "working" | "studying" | "traveling" | "out";
       task_priority: "low" | "normal" | "high";
+      task_recurrence: "daily";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -355,6 +359,7 @@ export const Constants = {
       family_role: ["owner", "member"],
       member_status: ["at_home", "working", "studying", "traveling", "out"],
       task_priority: ["low", "normal", "high"],
+      task_recurrence: ["daily"],
     },
   },
 } as const;

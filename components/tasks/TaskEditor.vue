@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trash2 } from 'lucide-vue-next'
+import { Repeat, Trash2 } from 'lucide-vue-next'
 import type { Task, TaskPriority } from '~/types/models'
 import { audienceColumns, audienceOf } from '~/utils/family'
 import { PRIORITY_LABEL, dueAtFor, taskTime } from '~/utils/tasks'
@@ -17,6 +17,7 @@ const form = reactive({
   due_date: props.task.due_date ?? '',
   due_time: taskTime(props.task) ?? '',
   priority: props.task.priority,
+  daily: props.task.recurrence === 'daily',
   audience: audienceOf(props.task),
 })
 const isCreator = computed(() => props.task.user_id === userId.value)
@@ -37,13 +38,15 @@ function save() {
     titleError.value = 'Escreva um título para a tarefa.'
     return
   }
+  const dueDate = form.due_date || (form.daily ? toCivilDate(new Date()) : null)
   emit('close')
   void update(props.task, {
     title,
     description: form.description.trim() || null,
-    due_date: form.due_date || null,
-    due_at: dueAtFor(form.due_date || null, form.due_time || null),
+    due_date: dueDate,
+    due_at: dueAtFor(dueDate, form.due_time || null),
     priority: form.priority,
+    recurrence: form.daily ? 'daily' : null,
     ...audienceColumns(form.audience, family.value?.id ?? props.task.family_id),
   })
 }
@@ -87,15 +90,27 @@ function confirmDelete() {
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row">
-      <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3 sm:w-80">
-        <UiTextField :id="fieldId('data')" v-model="form.due_date" label="Vencimento" type="date" />
-        <UiTextField
-          :id="fieldId('hora')"
-          v-model="form.due_time"
-          label="Horário"
-          type="time"
-          :disabled="!form.due_date"
-        />
+      <div class="flex flex-col gap-2 sm:w-80">
+        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,8rem)] gap-3">
+          <UiTextField :id="fieldId('data')" v-model="form.due_date" :label="form.daily ? 'A partir de' : 'Vencimento'" type="date" />
+          <UiTextField
+            :id="fieldId('hora')"
+            v-model="form.due_time"
+            label="Horário"
+            type="time"
+            :disabled="!form.due_date && !form.daily"
+          />
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-9 items-center gap-1.5 self-start rounded-sm px-2.5 text-[15px] font-medium transition-colors"
+          :class="form.daily ? 'bg-accent-soft text-accent' : 'text-ink-muted hover:bg-canvas hover:text-ink'"
+          :aria-pressed="form.daily"
+          @click="form.daily = !form.daily"
+        >
+          <Repeat class="size-4" aria-hidden="true" />
+          Repetir todo dia
+        </button>
       </div>
 
       <fieldset>

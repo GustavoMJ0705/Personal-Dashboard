@@ -90,7 +90,10 @@ Todas as tabelas: `id uuid default gen_random_uuid()`, `user_id`, `created_at`, 
 - `tasks`: `title`, `description`, `due_date date` (dia civil), `due_at timestamptz` (horário opcional; check garante
   que não existe sem data), `priority public.task_priority`
   (enum `low | normal | high`, default `normal`; enum para os tipos gerados virem como união), `completed_at timestamptz`,
-  `family_id`, `assignee_ids uuid[]` (default `{}`)
+  `family_id`, `assignee_ids uuid[]` (default `{}`), `recurrence public.task_recurrence` (enum `daily`, nulo = não repete;
+  check exige `due_date`, que vira a data de início). Tarefa diária: vence todo dia no mesmo horário a partir de `due_date`; concluir
+  marca só o dia (`completed_at` de dia anterior conta como aberta). Nunca fica atrasada nem tem "Adiar". A projeção para o dia é
+  `taskOnDay`/`tasksOnDay` em `utils/tasks.ts`, aplicada nas páginas antes de agrupar.
 - `events`: `title`, `starts_at`, `ends_at` (check `ends_at >= starts_at`), `location`, `all_day boolean`, `family_id`, `assignee_ids uuid[]` (default `{}`)
 - `reminders`: `title`, `remind_at`, `channel text`, `sent_at`; índice parcial em `remind_at where sent_at is null` para o pg_cron. Sempre pessoal.
 - `families`: `user_id` (dono), `name`
@@ -190,7 +193,7 @@ só os tokens existem. O tema escuro só redefine as variáveis (`[data-theme='d
 - A tela inicial responde "o que preciso fazer agora" sem clique.
 - Criar, concluir e adiar tarefa em no máximo dois toques. "Adiar" = para o dia seguinte ao vencimento (ou a amanhã, se já venceu),
   mantendo o horário. Dentro do dia, tarefas com horário vêm primeiro, em ordem de hora; horário que já passou fica em `danger`.
-- Criação rápida de tarefa (`TaskQuickAdd`) sempre com dia, horário e "Para quem". No Início (`collapsible`), as opções aparecem
+- Criação rápida de tarefa (`TaskQuickAdd`) sempre com dia, horário, "Todo dia" e "Para quem". No Início (`collapsible`), as opções aparecem
   ao focar o campo e recolhem se nada mudou; tarefa criada para outro dia mostra toast de confirmação.
 - Updates otimistas com rollback e toast de erro se o Supabase falhar. No create otimista, usar id temporário e trocar pela linha real; deduplicar por id, porque o eco do Realtime pode chegar antes da resposta.
 - Ao voltar o app para primeiro plano (`visibilitychange`), recarregar em silêncio (tarefas, agenda, família): o canal do Realtime cai em segundo plano no celular.

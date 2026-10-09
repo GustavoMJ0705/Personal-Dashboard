@@ -1,5 +1,5 @@
 import type { RealtimeChannel, RealtimePostgresChangesPayload, SupabaseClient } from '@supabase/supabase-js'
-import type { Task, TaskPriority } from '~/types/models'
+import type { Task, TaskPriority, TaskRecurrence } from '~/types/models'
 import { addDaysToCivilDate, formatCivilDate, toCivilDate } from '~/utils/datetime'
 import { dueAtFor, postponeTarget, taskTime } from '~/utils/tasks'
 
@@ -13,9 +13,10 @@ export interface TaskDraft {
   priority?: TaskPriority
   family_id?: string | null
   assignee_ids?: string[]
+  recurrence?: TaskRecurrence | null
 }
 
-export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'due_at' | 'priority' | 'family_id' | 'assignee_ids'>
+export type TaskEdit = Pick<Task, 'title' | 'description' | 'due_date' | 'due_at' | 'priority' | 'family_id' | 'assignee_ids' | 'recurrence'>
 type TaskPatch = Partial<TaskEdit & Pick<Task, 'completed_at'>>
 
 const TEMP_PREFIX = 'temp-'
@@ -83,11 +84,13 @@ export function useTasks() {
   async function load({ silent = false } = {}) {
     if (!silent) status.value = 'loading'
     const [open, done] = await Promise.all([
-      client.from('tasks').select('*').is('completed_at', null),
+      // Diárias vêm sempre: concluída num dia anterior volta a ficar aberta.
+      client.from('tasks').select('*').or('completed_at.is.null,recurrence.not.is.null'),
       client
         .from('tasks')
         .select('*')
         .not('completed_at', 'is', null)
+        .is('recurrence', null)
         .order('completed_at', { ascending: false })
         .limit(COMPLETED_LIMIT),
     ])
@@ -170,6 +173,7 @@ export function useTasks() {
       priority: draft.priority ?? 'normal',
       family_id: draft.family_id ?? null,
       assignee_ids: draft.assignee_ids ?? [],
+      recurrence: draft.due_date ? draft.recurrence ?? null : null,
       completed_at: null,
       created_at: now,
       updated_at: now,
@@ -186,6 +190,7 @@ export function useTasks() {
         priority: temp.priority,
         family_id: temp.family_id,
         assignee_ids: temp.assignee_ids,
+        recurrence: temp.recurrence,
       })
       .select()
       .single()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Clock3, Plus } from 'lucide-vue-next'
+import { Clock3, Plus, Repeat } from 'lucide-vue-next'
 import { addDaysToCivilDate, formatDayLabel } from '~/utils/datetime'
 import { type Audience, audienceColumns } from '~/utils/family'
 import { dueAtFor } from '~/utils/tasks'
@@ -15,6 +15,7 @@ const audience = ref<Audience>({ kind: 'me' })
 const title = ref('')
 const due = ref(props.today)
 const time = ref('')
+const daily = ref(false)
 const timeInput = ref<HTMLInputElement>()
 
 /** No celular, focar o campo não abre o seletor de hora: abre explicitamente. */
@@ -32,7 +33,16 @@ const input = ref<HTMLInputElement>()
 const form = ref<HTMLFormElement>()
 const expanded = ref(!props.collapsible)
 
-const isPristine = () => !title.value.trim() && due.value === props.today && !time.value && audience.value.kind === 'me'
+const isPristine = () => !title.value.trim() && due.value === props.today && !time.value && !daily.value && audience.value.kind === 'me'
+
+function toggleDaily() {
+  daily.value = !daily.value
+  if (daily.value && !due.value) due.value = props.today
+}
+
+watch(due, (value) => {
+  if (!value) daily.value = false
+})
 
 function onFocusOut() {
   if (!props.collapsible) return
@@ -61,13 +71,16 @@ async function submit() {
   if (!value) return
   const dueDate = due.value || null
   const dueAt = dueAtFor(dueDate, time.value || null)
+  const recurrence = dueDate && daily.value ? 'daily' : null
   title.value = ''
   time.value = ''
+  daily.value = false
   input.value?.focus()
   const ok = await create({
     title: value,
     due_date: dueDate,
     due_at: dueAt,
+    recurrence,
     ...audienceColumns(audience.value, family.value?.id ?? null),
   })
   if (!ok && !title.value) title.value = value
@@ -133,6 +146,17 @@ async function submit() {
           class="h-8 min-w-[6.5rem] bg-transparent pr-2 text-base disabled:cursor-not-allowed"
         >
       </div>
+      <button
+        type="button"
+        class="inline-flex h-8 items-center gap-1.5 rounded-sm px-2.5 text-sm font-medium transition-colors"
+        :class="daily ? 'bg-accent-soft text-accent' : 'text-ink-muted hover:bg-surface hover:text-ink'"
+        :aria-pressed="daily"
+        aria-label="Repetir todo dia"
+        @click="toggleDaily"
+      >
+        <Repeat class="size-4" aria-hidden="true" />
+        Todo dia
+      </button>
     </fieldset>
 
     <div v-if="expanded && family" class="border-t px-2.5 py-2">

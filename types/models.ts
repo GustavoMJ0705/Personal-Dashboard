@@ -6,6 +6,7 @@ type Insert<T extends keyof PublicSchema['Tables']> = PublicSchema['Tables'][T][
 type Update<T extends keyof PublicSchema['Tables']> = PublicSchema['Tables'][T]['Update']
 
 export type TaskPriority = PublicSchema['Enums']['task_priority']
+export type TaskRecurrence = PublicSchema['Enums']['task_recurrence']
 
 export type Task = Row<'tasks'>
 export type TaskInsert = Insert<'tasks'>
